@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>New Scrape - Amazon Reviews Scraper</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="container header-content">
+            <a href="index.html" class="logo">Amazon Reviews Scraper</a>
+            <nav class="nav">
+                <a href="index.html">Dashboard</a>
+                <a href="new-scrape.html" class="active">New Scrape</a>
+                <a href="jobs.html">Jobs</a>
+                <a href="skus.html">SKUs</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <h1 class="page-title">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 12px; color: var(--primary-500);">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                    Start New Scrape
+                </h1>
+                <p class="page-subtitle">Configure and launch a new Amazon reviews scraping job</p>
+            </div>
+
+            <div id="alert-container"></div>
+
+            <form id="scrape-form" class="card">
+                <div class="card-body">
+                    <div class="grid grid-2">
+                        <!-- Left Column -->
+                        <div>
+                            <div class="form-group">
+                                <label class="form-label" for="job-name">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;">
+                                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                    </svg>
+                                    Job Name *
+                                </label>
+                                <input type="text" id="job-name" class="form-control" required
+                                    placeholder="e.g., WF2 Competitor Analysis">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="sku-code">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;">
+                                        <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                        <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                                    </svg>
+                                    SKU Code
+                                </label>
+                                <input type="text" id="sku-code" class="form-control"
+                                    placeholder="e.g., WF2 (will create if doesn't exist)">
+                                <p class="form-hint">Optional - helps organize jobs by product</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="asins">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;">
+                                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                                    </svg>
+                                    ASINs *
+                                </label>
+                                <textarea id="asins" class="form-control" rows="6" required
+                                    placeholder="Enter ASINs (one per line or comma-separated)&#10;e.g.,&#10;B08N5WRWNW&#10;B07ZPC9QD4"></textarea>
+                                <p class="form-hint">Enter one or more Amazon ASINs</p>
+                            </div>
+
+                            <div id="asin-warnings"></div>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div>
+                            <div class="form-group">
+                                <label class="form-label" for="marketplace">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <line x1="2" y1="12" x2="22" y2="12"></line>
+                                        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                                    </svg>
+                                    Marketplace
+                                </label>
+                                <select id="marketplace" class="form-control">
+                                    <option value="com" selected>Amazon.com (US)</option>
+                                    <option value="co.uk">Amazon.co.uk (UK)</option>
+                                    <option value="de">Amazon.de (Germany)</option>
+                                    <option value="fr">Amazon.fr (France)</option>
+                                    <option value="it">Amazon.it (Italy)</option>
+                                    <option value="es">Amazon.es (Spain)</option>
+                                    <option value="ca">Amazon.ca (Canada)</option>
+                                    <option value="com.au">Amazon.com.au (Australia)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="sort-by">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;">
+                                        <line x1="4" y1="9" x2="20" y2="9"></line>
+                                        <line x1="4" y1="15" x2="20" y2="15"></line>
+                                        <line x1="10" y1="3" x2="8" y2="21"></line>
+                                        <line x1="16" y1="3" x2="14" y2="21"></line>
+                                    </svg>
+                                    Sort Reviews By
+                                </label>
+                                <select id="sort-by" class="form-control">
+                                    <option value="recent" selected>Most Recent</option>
+                                    <option value="helpful">Most Helpful</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="max-pages">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                        <polyline points="14 2 14 8 20 8"></polyline>
+                                    </svg>
+                                    Max Pages per ASIN
+                                </label>
+                                <input type="range" id="max-pages" class="form-control"
+                                    min="1" max="10" value="10" style="padding: 0; margin-top: 8px;">
+                                <p class="form-hint">Pages: <span id="max-pages-value" style="font-weight: 600; color: var(--primary-600);">10</span> (approx. <span id="reviews-estimate" style="font-weight: 600;">100</span> reviews per ASIN)</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;">
+                                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                                    </svg>
+                                    Star Rating Filter
+                                </label>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="stars" value="five_star" checked>
+                                        5 Star
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="stars" value="four_star" checked>
+                                        4 Star
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="stars" value="three_star">
+                                        3 Star
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="stars" value="two_star">
+                                        2 Star
+                                    </label>
+                                    <label class="checkbox-item">
+                                        <input type="checkbox" name="stars" value="one_star">
+                                        1 Star
+                                    </label>
+                                </div>
+                                <p class="form-hint">Select one or more star ratings to scrape</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="keyword-filter">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    </svg>
+                                    Keyword Filter (optional)
+                                </label>
+                                <input type="text" id="keyword-filter" class="form-control"
+                                    placeholder="e.g., quality">
+                                <p class="form-hint">Only scrape reviews containing this keyword</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="reviewer-type">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 6px;">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
+                                    Reviewer Type
+                                </label>
+                                <select id="reviewer-type" class="form-control">
+                                    <option value="all_reviews" selected>All Reviews</option>
+                                    <option value="avp_only_reviews">Verified Purchases Only</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3 flex gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submit-btn">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            Start Scraping
+                        </button>
+                        <a href="index.html" class="btn btn-secondary btn-lg">Cancel</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script src="js/api.js"></script>
+    <script src="js/new-scrape.js"></script>
+</body>
+</html>

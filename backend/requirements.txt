@@ -1,0 +1,30 @@
+# =============================================================================
+# Amazon Reviews Scraper - Python Dependencies
+# =============================================================================
+# Install with: pip install -r requirements.txt
+# =============================================================================
+
+# Web Framework
+fastapi==0.109.2
+uvicorn[standard]==0.27.1
+
+# Database
+sqlalchemy==2.0.25
+pymysql==1.1.0
+
+# Apify Integration
+apify-client==1.6.4
+
+# Data Processing
+pydantic==2.6.1
+pydantic-settings==2.1.0
+python-dotenv==1.0.1
+
+# Excel Export
+openpyxl==3.1.2
+
+# HTTP Client (for async operations)
+httpx==0.26.0
+
+# Utilities
+python-multipart==0.0.9
