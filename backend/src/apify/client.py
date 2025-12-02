@@ -40,6 +40,21 @@ class ApifyService:
     # Actor IDs - use tilde (~) not slash (/)
     ACTOR_IDS = {
         ApifyActorType.REVIEWS: "axesso_data~amazon-reviews-scraper",
+        ApifyActorType.PRODUCT_DETAILS: "axesso_data~amazon-product-details-scraper",
+    }
+
+    # Marketplace domain mapping
+    MARKETPLACE_DOMAINS = {
+        "com": "amazon.com",
+        "ca": "amazon.ca",
+        "co.uk": "amazon.co.uk",
+        "de": "amazon.de",
+        "fr": "amazon.fr",
+        "it": "amazon.it",
+        "es": "amazon.es",
+        "co.jp": "amazon.co.jp",
+        "com.au": "amazon.com.au",
+        "com.mx": "amazon.com.mx",
     }
 
     # Reviews per page (approximation for max_reviews calculation)
@@ -154,6 +169,124 @@ class ApifyService:
 
         items = list(self.client.dataset(dataset_id).iterate_items())
         return items
+
+    # ===== Product Details Scraping =====
+
+    def construct_product_url(self, asin: str, marketplace: str) -> str:
+        """
+        Construct Amazon product URL from ASIN and marketplace.
+
+        Args:
+            asin: Amazon ASIN code
+            marketplace: Marketplace code (com, co.uk, de, etc.)
+
+        Returns:
+            Full Amazon product URL
+        """
+        domain = self.MARKETPLACE_DOMAINS.get(marketplace, "amazon.com")
+        return f"https://www.{domain}/dp/{asin}"
+
+    async def scrape_product_details(
+        self,
+        asins: List[str],
+        marketplace: str = "com",
+    ) -> List[dict]:
+        """
+        Scrape product details for multiple ASINs.
+
+        The product details scraper can handle batch requests efficiently.
+
+        Args:
+            asins: List of Amazon ASIN codes
+            marketplace: Amazon marketplace code
+
+        Returns:
+            List of product detail dictionaries from Apify
+
+        Raises:
+            ApifyError: If API call fails
+        """
+        # Build URLs for all ASINs
+        urls = [self.construct_product_url(asin, marketplace) for asin in asins]
+
+        # Prepare actor input
+        actor_input = {"urls": urls}
+
+        logger.info(f"Starting Apify product scrape for {len(asins)} ASINs on {marketplace}")
+        logger.debug(f"Actor input: {actor_input}")
+
+        try:
+            results = await asyncio.to_thread(
+                self._run_actor_sync,
+                ApifyActorType.PRODUCT_DETAILS,
+                actor_input,
+            )
+            logger.info(f"Scraped {len(results)} product details")
+            return results
+
+        except Exception as e:
+            logger.error(f"Apify product scrape failed: {e}")
+            raise ApifyError(f"Failed to scrape product details: {str(e)}")
+
+    def scrape_product_details_sync(
+        self,
+        asins: List[str],
+        marketplace: str = "com",
+    ) -> List[dict]:
+        """
+        Synchronous version for use in worker thread.
+
+        Args:
+            asins: List of Amazon ASIN codes
+            marketplace: Amazon marketplace code
+
+        Returns:
+            List of product detail dictionaries from Apify
+        """
+        urls = [self.construct_product_url(asin, marketplace) for asin in asins]
+        actor_input = {"urls": urls}
+
+        logger.info(f"Starting Apify product scrape (sync) for {len(asins)} ASINs")
+
+        try:
+            results = self._run_actor_sync(
+                ApifyActorType.PRODUCT_DETAILS,
+                actor_input,
+            )
+            logger.info(f"Scraped {len(results)} product details")
+            return results
+
+        except Exception as e:
+            logger.error(f"Apify product scrape failed: {e}")
+            raise ApifyError(f"Failed to scrape product details: {str(e)}")
+
+    @staticmethod
+    def parse_rating(rating_str: str) -> Optional[float]:
+        """
+        Parse rating string from Apify response.
+
+        Converts "4.5 out of 5 stars" to 4.5
+
+        Args:
+            rating_str: Rating string from Apify
+
+        Returns:
+            Float rating value or None if parsing fails
+        """
+        import re
+
+        if not rating_str:
+            return None
+
+        match = re.search(r"(\d+\.?\d*)\s*out of", rating_str)
+        if match:
+            return float(match.group(1))
+
+        # Try direct float conversion as fallback
+        try:
+            return float(rating_str)
+        except (ValueError, TypeError):
+            return None
 
     async def check_api_key(self) -> bool:
         """

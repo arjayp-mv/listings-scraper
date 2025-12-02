@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKUs - Amazon Reviews Scraper</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="header"></header>
+
+    <main class="main">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="flex justify-between align-center">
+                    <div>
+                        <h1 class="page-title">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 12px; color: var(--primary-500);">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                            </svg>
+                            Parent SKUs
+                        </h1>
+                        <p class="page-subtitle">Browse parent SKUs and their Channel SKU metrics</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="alert-container"></div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid stats-grid-3" id="stats-container">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-total-skus">-</div>
+                    <div class="stat-label">Total SKUs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-total-channel-skus">-</div>
+                    <div class="stat-label">Total Channel SKUs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-avg-rating">-</div>
+                    <div class="stat-label">Avg Rating</div>
+                </div>
+            </div>
+
+            <!-- Search -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="flex gap-2 align-center">
+                        <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                            <input type="text" id="search-input" class="form-control" placeholder="Search by SKU code...">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SKUs Table -->
+            <div class="card">
+                <div class="card-body" style="padding: 0;">
+                    <table class="table" id="skus-table">
+                        <thead>
+                            <tr>
+                                <th>SKU Code</th>
+                                <th>Channel SKUs</th>
+                                <th>Avg Rating</th>
+                                <th>Total Reviews</th>
+                                <th>Last Scanned</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skus-body">
+                            <tr>
+                                <td colspan="6" class="loading">
+                                    <div class="spinner"></div> Loading SKUs...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-container" id="pagination-container"></div>
+        </div>
+    </main>
+
+    <script src="js/nav.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/skus-list.js"></script>
+</body>
+</html>

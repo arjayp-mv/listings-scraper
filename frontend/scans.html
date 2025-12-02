@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan History - Amazon Reviews Scraper</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="header"></header>
+
+    <main class="main">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="flex justify-between align-center">
+                    <div>
+                        <h1 class="page-title">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 12px; color: var(--primary-500);">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            Scan History
+                        </h1>
+                        <p class="page-subtitle">View all product scan jobs and their results</p>
+                    </div>
+                    <a href="new-scan.html" class="btn btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                        New Scan
+                    </a>
+                </div>
+            </div>
+
+            <div id="alert-container"></div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid stats-grid-4" id="stats-container">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-total">-</div>
+                    <div class="stat-label">Total Scans</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-running">-</div>
+                    <div class="stat-label">Running</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-completed">-</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-listings">-</div>
+                    <div class="stat-label">Total Listings</div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="flex gap-2 align-center">
+                        <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                            <input type="text" id="search-input" class="form-control" placeholder="Search scans...">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <select id="status-filter" class="form-control">
+                                <option value="">All Statuses</option>
+                                <option value="queued">Queued</option>
+                                <option value="running">Running</option>
+                                <option value="completed">Completed</option>
+                                <option value="failed">Failed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scans Table -->
+            <div class="card">
+                <div class="card-body" style="padding: 0;">
+                    <table class="table" id="scans-table">
+                        <thead>
+                            <tr>
+                                <th>Job Name</th>
+                                <th>Status</th>
+                                <th>Progress</th>
+                                <th>Listings</th>
+                                <th>Marketplace</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="scans-body">
+                            <tr>
+                                <td colspan="7" class="loading">
+                                    <div class="spinner"></div> Loading scans...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-container" id="pagination-container"></div>
+        </div>
+    </main>
+
+    <script src="js/nav.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/scans.js"></script>
+</body>
+</html>

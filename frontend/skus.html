@@ -10,17 +10,7 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <header class="header">
-        <div class="container header-content">
-            <a href="index.html" class="logo">Amazon Reviews Scraper</a>
-            <nav class="nav">
-                <a href="index.html">Dashboard</a>
-                <a href="new-scrape.html">New Scrape</a>
-                <a href="jobs.html">Jobs</a>
-                <a href="skus.html" class="active">SKUs</a>
-            </nav>
-        </div>
-    </header>
+    <header class="header"></header>
 
     <main class="main">
         <div class="container">
@@ -91,6 +81,7 @@
 
     <!-- Modal -->
     <div class="modal" id="sku-modal">
+        <div class="modal-backdrop" onclick="closeModal()"></div>
         <div class="modal-content">
             <div class="modal-header">
                 <h2 id="modal-title">
@@ -148,7 +139,8 @@
         </div>
     </div>
 
-    <script src="js/api.js"></script>
-    <script src="js/skus.js"></script>
+    <script src="js/nav.js"></script>
+    <script src="js/api.js?v=2"></script>
+    <script src="js/skus.js?v=2"></script>
 </body>
 </html>

@@ -68,3 +68,28 @@ class SkuSearchResult(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class SkuWithChannelSkuStats(BaseModel):
+    """SKU response with Channel SKU aggregated stats."""
+
+    id: int
+    sku_code: str
+    description: Optional[str]
+    created_at: datetime
+    channel_sku_count: int = 0
+    avg_rating: Optional[float] = None
+    total_reviews: int = 0
+    last_scraped_at: Optional[datetime] = None
+
+
+class SkuWithChannelSkuStatsListResponse(BaseModel):
+    """Paginated list of SKUs with Channel SKU stats."""
+
+    items: List[SkuWithChannelSkuStats]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+    has_next: bool
+    has_previous: bool

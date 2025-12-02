@@ -247,3 +247,152 @@ class ReviewService:
             "verified_count": verified,
             "average_rating": average,
         }
+
+    # ===== SKU-based Review Queries =====
+
+    def get_reviews_for_sku(
+        self,
+        sku_id: int,
+        offset: int = 0,
+        limit: int = 50,
+        search: Optional[str] = None,
+        rating: Optional[str] = None,
+    ) -> tuple[List[Review], int]:
+        """
+        Get reviews for a SKU (across all its jobs).
+
+        Args:
+            sku_id: SKU ID to get reviews for
+            offset: Pagination offset
+            limit: Page size
+            search: Optional search term for title/text
+            rating: Optional rating filter
+
+        Returns:
+            Tuple of (review list, total count)
+        """
+        query = (
+            self.db.query(Review)
+            .join(JobAsin)
+            .join(ScrapeJob)
+            .filter(ScrapeJob.sku_id == sku_id)
+        )
+
+        if search:
+            search_term = f"%{search}%"
+            query = query.filter(
+                (Review.title.ilike(search_term)) |
+                (Review.text.ilike(search_term))
+            )
+
+        if rating:
+            query = query.filter(Review.rating == rating)
+
+        query = query.order_by(Review.id.desc())
+
+        total = query.count()
+        items = query.offset(offset).limit(limit).all()
+        return items, total
+
+    def get_all_reviews_for_sku(
+        self,
+        sku_id: int,
+        search: Optional[str] = None,
+        rating: Optional[str] = None,
+    ) -> List[Review]:
+        """
+        Get all reviews for a SKU (no pagination).
+
+        Used for export and formatting.
+        """
+        query = (
+            self.db.query(Review)
+            .join(JobAsin)
+            .join(ScrapeJob)
+            .filter(ScrapeJob.sku_id == sku_id)
+        )
+
+        if search:
+            search_term = f"%{search}%"
+            query = query.filter(
+                (Review.title.ilike(search_term)) |
+                (Review.text.ilike(search_term))
+            )
+
+        if rating:
+            query = query.filter(Review.rating == rating)
+
+        return query.order_by(Review.id).all()
+
+    def get_formatted_reviews_for_sku(
+        self,
+        sku_id: int,
+        search: Optional[str] = None,
+        rating: Optional[str] = None,
+    ) -> dict:
+        """
+        Get reviews for a SKU formatted for copy/paste.
+        """
+        reviews = self.get_all_reviews_for_sku(sku_id, search, rating)
+
+        formatted_items = []
+        text_parts = []
+
+        for review in reviews:
+            title = review.title or ""
+            text = review.text or ""
+
+            if not title and not text:
+                continue
+
+            formatted_items.append({
+                "title": title,
+                "text": text,
+            })
+            text_parts.append(f"{title}\n{text}")
+
+        formatted_text = "\n\n".join(text_parts)
+
+        return {
+            "reviews": formatted_items,
+            "total": len(formatted_items),
+            "formatted_text": formatted_text,
+        }
+
+    def get_review_stats_for_sku(self, sku_id: int) -> dict:
+        """
+        Get review statistics for a SKU (across all its jobs).
+        """
+        query = (
+            self.db.query(Review)
+            .join(JobAsin)
+            .join(ScrapeJob)
+            .filter(ScrapeJob.sku_id == sku_id)
+        )
+
+        total = query.count()
+        verified = query.filter(Review.verified == True).count()
+
+        five_star = query.filter(Review.rating.like("%5%")).count()
+        four_star = query.filter(Review.rating.like("%4%")).count()
+        three_star = query.filter(Review.rating.like("%3%")).count()
+        two_star = query.filter(Review.rating.like("%2%")).count()
+        one_star = query.filter(Review.rating.like("%1%")).count()
+
+        total_rated = five_star + four_star + three_star + two_star + one_star
+        average = None
+        if total_rated > 0:
+            weighted_sum = (5 * five_star + 4 * four_star + 3 * three_star +
+                           2 * two_star + 1 * one_star)
+            average = round(weighted_sum / total_rated, 2)
+
+        return {
+            "total_reviews": total,
+            "five_star": five_star,
+            "four_star": four_star,
+            "three_star": three_star,
+            "two_star": two_star,
+            "one_star": one_star,
+            "verified_count": verified,
+            "average_rating": average,
+        }

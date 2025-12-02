@@ -1,0 +1,401 @@
+How does Axesso Amazon Product Scraper works?
+Our Actor extract all available data from Amazon product details page. You can use this Actor by providing the respective URL list for which you would like to fetch product details from. There is no limitation on provided URLs, our Actor will fetch product data for every single Amazon URL you provide. Please find in the following an example of an input json including two Amazon Product URLs:
+
+{
+"urls": [
+    "https://www.amazon.de/dp/B0047GO1IA",
+    "https://www.amazon.com/dp/B0BY8N4KRD?psc=1"
+    ]
+}
+
+Sample Output
+{
+   "statusCode":200,
+   "statusMessage":"FOUND",
+   "url":"https://www.amazon.com/dp/B0BKGXQBCB?psc=1",
+   "title":"HolaHatha 2, 3, 5, 8, and 10 Pound Neoprene Dumbbell Free Hand Weight Set with Rack, Ideal for Home Exercises to Gain Tone and Definition, Pastel",
+   "manufacturer":"Visit the HolaHatha Store",
+   "countReview":3511,
+   "productRating":"4.7 out of 5 stars",
+   "asin":"B0BKGXQBCB",
+   "soldBy":"Spreetail",
+   "fulfilledBy":"Spreetail",
+   "sellerId":"A1DXN92KCKEQV4",
+   "warehouseAvailability":"In Stock",
+   "retailPrice":56.99,
+   "price":49.99,
+   "priceRange":null,
+   "shippingPrice":0,
+   "priceShippingInformation":"FREE delivery Tomorrow, August 15. Order within 4 hrs 6 mins. Details",
+   "priceSaving":"-12%",
+   "features":[
+      "Versatile dumbbell set includes 3, 5, and 8-pound hand weights to customize workouts to suit your fitness level and goals making it an essential addition to any home gym",
+      "Ideal for building strength and endurance by targeting multiple full-body muscle groups for toning, with this set you can efficiently target various muscle groups, improving overall fitness"
+   ],
+   "imageUrlList":[
+      "https://m.media-amazon.com/images/I/619JR-n8diL._AC_SL1500_.jpg",
+      "https://m.media-amazon.com/images/I/61oy0ZC7XkL._AC_SL1500_.jpg"
+   ],
+   "videoeUrlList":[
+      "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/6cfb3c9b-f90d-4dad-bd03-c60684c45c09/default.jobtemplate.mp4.480.mp4",
+      "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/4eced9a9-5497-4549-b9e0-82f7d514a316/default.jobtemplate.hls.m3u8"
+   ],
+   "productDescription":"Level up your home gym exercise equipment with the HolaHatha 146-Pound Dumbbell Set, a comprehensive and colorful weight collection tailored to elevate your strength and conditioning workouts. This versatile set is a great addition to your home setup, offering a diverse range of dumbbell weights to accommodate a wide variety of exercises. Whether you're into lunges, kickbacks, bicep curls, cardio routines, or more, this set ensures your fitness regimen never becomes monotonous. Carefully crafted to fit comfortably in smaller hands, these free weights are an ideal choice for those who struggle with larger handles. The non-slip neoprene coating and hex-shaped ends provide a secure grip even when you're perspiring profusely, preventing any accidental slips, or rolling while in use. These dumbbells are engineered for long-term durability, crafted from premium materials, ensuring they can withstand the rigors of your daily workouts. This complete kit includes a handy storage dumbbell rack, allowing you to keep your workout equipment neatly organized when not in use. The multicolored set comprises (2) 3-pound, (2) 5-pound, (2) 8-pound, (2) 10-pound, (2) 12-pound, (2) 15-pound, and (2) 20-pound dumbbell weights, providing you with comprehensive range to suit your evolving fitness needs. Whether your goal is to gain tone and definition or simply maintain an active lifestyle, these dumbbells are designed with your exercise enjoyment in mind. Elevate your fitness journey at home with the HolaHatha 146-Pound Dumbbell Weight Set, designed to empower you in achieving your fitness goals while making your workouts enjoyable and effective.",
+   "productDetails":[
+      {
+         "name":"Brand",
+         "value":"HolaHatha"
+      },
+      {
+         "name":"Color",
+         "value":"Blues"
+      },
+      {
+         "name":"Material",
+         "value":"Cast Iron"
+      }
+   ],
+   "minimalQuantity":"1",
+   "reviews":[
+      {
+         "text":"Love this set but the rack is not very strong and wobbles on tile floor FYI. I’m still glad I bought it as I needed a few smaller weights for specific workout's",
+         "date":"Reviewed in the United States on August 9, 2024",
+         "rating":"5.0 out of 5 stars",
+         "title":"Great set",
+         "userName":"Tamra Paugh",
+         "url":"/gp/customer-reviews/R2R9F3CZTCYUL3/ref=cm_cr_dp_d_rvw_ttl?ie=UTF8&ASIN=B0BKGXQBCB",
+         "imageUrlList":[
+            
+         ],
+         "variationList":[
+            "Style: 12 LB",
+            "Color: Multicolor"
+         ],
+         "reviewId":"R2R9F3CZTCYUL3",
+         "locale":null
+      }
+   ],
+   "productSpecification":[
+      
+   ],
+   "mainImage":{
+      "imageUrl":"https://m.media-amazon.com/images/I/619JR-n8diL._AC_SX679_.jpg",
+      "imageResolution":"679 x 679"
+   },
+   "variations":[
+      {
+         "variationName":"variation_style_name",
+         "values":[
+            {
+               "value":"12 LB",
+               "dpUrl":"/dp/B0D64NXD1W/ref=twister_B0BLWFN3L9?_encoding=UTF8&psc=1",
+               "selected":false,
+               "available":true,
+               "price":0,
+               "imageUrl":null,
+               "asin":"B0D64NXD1W"
+            }
+         ]
+      },
+      {
+         "variationName":"variation_color_name",
+         "values":[
+            {
+               "value":"Black",
+               "dpUrl":"/dp/B0CQTP4RL2/ref=twister_B0BLWFN3L9?_encoding=UTF8&psc=1",
+               "selected":false,
+               "available":true,
+               "price":0,
+               "imageUrl":"https://m.media-amazon.com/images/I/41-YD1G4IzL._SS36_.jpg",
+               "asin":"B0CQTP4RL2"
+            }
+         ]
+      }
+   ],
+   "bookVariations":[
+      
+   ],
+   "categoriesExtended":[
+      {
+         "name":"Sports & Outdoors",
+         "url":"/sports-outdoors/b/ref=dp_bc_aui_C_1/142-0547055-6042131?ie=UTF8&node=3375251",
+         "node":"3375251"
+      },
+      {
+         "name":"Exercise & Fitness",
+         "url":"/Exercise-Equipment-Gym-Equipment/b/ref=dp_bc_aui_C_2/142-0547055-6042131?ie=UTF8&node=3407731",
+         "node":"3407731"
+      }
+   ],
+   "deliveryMessage":null,
+   "importantInformation":[
+      
+   ],
+   "buyBoxUsed":{
+      "condition":"Save with Used - Very Good",
+      "packageCondition":"Fast, Free Ground Shipping, Item may be repackaged or have original packaging damage",
+      "soldBy":"Spreetail",
+      "fulfilledBy":null,
+      "sellerId":"A1DXN92KCKEQV4",
+      "warehouseAvailability":"Only 1 left in stock - order soon.",
+      "retailPrice":56.99,
+      "price":44.54,
+      "priceShippingInformation":"FREE delivery August 16 - 20 FREE delivery August 16 - 20. Order within 4 hrs 6 mins. Details",
+      "priceSaving":null
+   },
+   "aboutProduct":[
+      {
+         "name":"Brand",
+         "value":"HolaHatha"
+      },
+      {
+         "name":"Color",
+         "value":"Blues"
+      },
+      {
+         "name":"Material",
+         "value":"Cast Iron"
+      }
+   ],
+   "globalReviews":[
+      {
+         "text":"Beau produit, bien emballé très satisfait",
+         "date":"Reviewed in Canada on December 17, 2023",
+         "rating":"5.0 out of 5 stars",
+         "title":"👍",
+         "userName":"Steve",
+         "url":"",
+         "imageUrlList":[
+            
+         ],
+         "variationList":[
+            "Style: 32 LB",
+            "Color: Blue/Red"
+         ],
+         "reviewId":"R3PZCL349V9FG1",
+         "locale":{
+            "language":"fr",
+            "country":"CA",
+            "marketplaceId":"A2EUQ1WTGCTBG2"
+         }
+      }
+   ],
+   "deal":false,
+   "prime":true,
+   "used":false,
+   "pastSales":"100+ bought in past month",
+   "reviewInsights":{
+      "summary":"Customers like the grip, value, performance, and ease of setup of the dumbbells. For example, they mention that it's comfortable, effective, and a great addition to their workout. That said, opinions are mixed on quality.",
+      "banner":"AI-generated from the text of customer reviews",
+      "featureAspects":[
+         {
+            "name":"Weights",
+            "featureMentionCount":91,
+            "featureMentionPositiveCount":79,
+            "featureMentionNegativeCount":12,
+            "keyFacts":"91 customers mention \"Weights\" 79 positive 12 negative",
+            "summary":"Customers like the weights. They say they are very nice, accurate, and the perfect increment of weights, with comfortable grips. Some mention that the stand is very flimsy, but the weight holds it down. Overall, customers are happy with the variety and size of the weight set.",
+            "sentiment":"POSITIVE",
+            "reviewSnippets":[
+               {
+                  "text":"\"...Looks good and fits in small places. The weights are very nice. I would highly recommend this product.\" Read more",
+                  "uri":"/gp/customer-reviews/RAU5CS9LXXY29"
+               }
+            ]
+         }
+      ]
+   }
+}
+
+How much does Axesso Amazon Product Scraper cost?
+Estimating the resources required for data scraping can be difficult due to the diverse nature of use cases. Therefore, it is advisable to conduct a test scrape using a small sample of input data and generate a limited amount of output. This will allow you to determine the cost per scrape, which can then be multiplied by the total number of scrapes you plan to perform.
+
+What to consider when using this Actor?
+Axesso - Data Service is performing Web Crawling activities since over one decade. All our expertises are included in this Actor, this means the user of this Actor is not required to deal with any inconveniences of web scraping.
+
+In details it means we cover the whole lifecycle including
+
+Proxy Rotation: We Use our own Proxy Pool including several Millions of Proxies in all countries worldwide avoiding that our Scraper can be blocked.
+
+Geo Targeting: We determine the correct location based on the provided URL. If you would like to fetch result for amazon.com domain, we only use Proxies from USA for the corresponding request. Thus, we support all Amazon domains available while using always the right Proxy location.
+
+Captchas and 503 Status Code: Captchas and temporary are completly handled by this Actor under the hood ensuring the user to get always the required data.
+
+Further rotation As already mentioned, our Actor is covering all required activities to ensure a smooth user experience at any point in time.
+
+API Clients
+from apify_client import ApifyClient
+
+# Initialize the ApifyClient with your API token
+client = ApifyClient("<YOUR_API_TOKEN>")
+
+# Prepare the Actor input
+run_input = { "urls": [
+        "https://www.amazon.com/dp/B00P8XQPY4",
+        "https://www.amazon.com/dp/B017MIRU96",
+    ] }
+
+# Run the Actor and wait for it to finish
+run = client.actor("7KgyOHHEiPEcilZXM").call(run_input=run_input)
+
+# Fetch and print Actor results from the run's dataset (if there are any)
+for item in client.dataset(run["defaultDatasetId"]).iterate_items():
+    print(item)
+	
+
+Run Actor
+View API reference
+Runs this Actor. The POST payload including its Content-Type header is passed as INPUT to the Actor (typically application/json). The Actor is started with the default options; you can override them using various URL query parameters.
+
+POST
+https://api.apify.com/v2/acts/axesso_data~amazon-product-details-scraper/runs?token=***
+
+
+Hint: By adding the method=POST query parameter, this API endpoint can be called using a GET request and thus used in third-party webhooks.
+
+Run Actor synchronously and get a key-value store record
+View API reference
+Runs this Actor and waits for it to finish. The POST payload, including its Content-Type, is passed as Actor input. The OUTPUT record (or any other specified with the outputRecordKey query parameter) from the default key-value store is returned as the HTTP response. The Actor is started with the default options; you can override them using various URL query parameters. Note that long HTTP connections might break.
+
+POST
+https://api.apify.com/v2/acts/axesso_data~amazon-product-details-scraper/run-sync?token=***
+
+
+Hint: This endpoint can be used with both POST and GET request methods, but only the POST method allows you to pass input.
+
+Run Actor synchronously and get dataset items
+View API reference
+Runs this Actor and waits for it to finish. The POST payload including its Content-Type header is passed as INPUT to the Actor (usually application/json). The HTTP response contains the Actor's dataset items, while the format of items depends on specifying dataset items' format parameter.
+
+POST
+https://api.apify.com/v2/acts/axesso_data~amazon-product-details-scraper/run-sync-get-dataset-items?token=***
+
+
+Hint: This endpoint can be used with both POST and GET request methods, but only the POST method allows you to pass input.
+
+Get Actor
+View API reference
+Returns settings of this Actor in JSON format.
+
+GET
+https://api.apify.com/v2/acts/axesso_data~amazon-product-details-scraper?token=***
+
+
+
+Test endpoint
+
+Get a list of Actor versions
+View API reference
+Returns a list of versions of this Actor in JSON format.
+
+GET
+https://api.apify.com/v2/acts/axesso_data~amazon-product-details-scraper/versions?token=***
+
+
+
+Test endpoint
+
+Get a list of Actor webhooks
+View API reference
+Returns a list of webhooks of this Actor in JSON format.
+
+GET
+https://api.apify.com/v2/acts/axesso_data~amazon-product-details-scraper/webhooks?token=***
+
+
+
+Test endpoint
+
+Update Actor
+View API reference
+Updates settings of this Actor. The POST payload must be a JSON object with fields to update.
+
+PUT
+https://api.apify.com/v2/acts/axesso_data~amazon-product-details-scraper?token=***
+
+
+Update Actor version
+View API reference
+Updates version of this Actor. Replace the 0.0 with the updating version number. The POST payload must be a JSON object with fields to update.
+
+PUT
+https://api.apify.com/v2/acts/axesso_data~amazon-product-details-scraper/versions/0.0?token=***
+
+
+Delete Actor
+View API reference
+Deletes this Actor and all associated data.
+
+DELETE
+https://api.apify.com/v2/acts/axesso_data~amazon-product-details-scraper?token=***
+
+
+Get a list of builds
+View API reference
+Returns a list of builds of this Actor in JSON format.
+
+GET
+https://api.apify.com/v2/acts/axesso_data~amazon-product-details-scraper/builds?token=***
+
+
+
+Test endpoint
+
+Build Actor
+View API reference
+Builds a specific version of this Actor and returns information about the build. Replace the 0.0 parameter with the desired version number.
+
+POST
+https://api.apify.com/v2/acts/axesso_data~amazon-product-details-scraper/builds?token=***&version=0.0
+
+
+Hint: By adding the method=POST query parameter, this API endpoint can be called using a GET request and thus used in third-party webhooks.
+
+Get a list of runs
+View API reference
+Returns a list of runs of this Actor in JSON format.
+
+GET
+https://api.apify.com/v2/acts/axesso_data~amazon-product-details-scraper/runs?token=***
+
+
+
+Test endpoint
+
+Get last run
+View API reference
+Returns the last run of this Actor in JSON format.
+
+GET
+https://api.apify.com/v2/acts/axesso_data~amazon-product-details-scraper/runs/last?token=***
+
+
+
+Test endpoint
+
+Hint: Add the status=SUCCEEDED query parameter to only get the last successful run of the Actor.
+
+Get last run dataset items
+View API reference
+Returns data from the default dataset of the last run of this Actor in JSON format.
+
+GET
+https://api.apify.com/v2/acts/axesso_data~amazon-product-details-scraper/runs/last/dataset/items?token=***
+
+
+
+Test endpoint
+
+Hint: Add the status=SUCCEEDED query parameter to only get the last successful run of the Actor. This API endpoint supports all the parameters of the Dataset Get Items endpoint.
+
+Get OpenAPI definition
+View API reference
+Returns the OpenAPI definition for the Actor's default build with information on how to run this Actor build using the API.
+
+GET
+https://api.apify.com/v2/acts/axesso_data~amazon-product-details-scraper/builds/default/openapi.json
+
+
+Test endpoint
+
+

@@ -17,7 +17,10 @@ from ..database import SessionLocal
 from ..jobs.models import ScrapeJob, JobAsin
 from ..jobs.service import JobService
 from ..reviews.service import ReviewService
-from ..apify.client import get_apify_service
+from ..product_scans.models import ProductScanJob, ProductScanItem, JobStatus, ItemStatus
+from ..product_scans.service import ProductScanService
+from ..channel_skus.service import ChannelSkuService
+from ..apify.client import get_apify_service, ApifyService
 from ..apify.exceptions import ApifyError
 
 
@@ -90,6 +93,7 @@ def _worker_tick() -> None:
     Single worker tick - process one job or sync stats.
 
     This is the main work function called each interval.
+    Processes both review scrape jobs and product scan jobs.
     """
     db = SessionLocal()
     try:
@@ -101,15 +105,20 @@ def _worker_tick() -> None:
         # Check for stuck jobs (running for > 30 minutes)
         _recover_stuck_jobs(db)
 
-        # Get next queued job
-        job = job_service.get_queued_job()
-        if not job:
+        # Process review scrape jobs (existing functionality)
+        review_job = job_service.get_queued_job()
+        if review_job:
+            logger.info(f"Processing review job {review_job.id}: {review_job.job_name}")
+            _process_job(db, review_job)
             return
 
-        logger.info(f"Processing job {job.id}: {job.job_name}")
-
-        # Process job
-        _process_job(db, job)
+        # Process product scan jobs (new functionality)
+        scan_service = ProductScanService(db)
+        product_job = scan_service.get_next_queued_job()
+        if product_job:
+            logger.info(f"Processing product scan job {product_job.id}: {product_job.job_name}")
+            _process_product_scan_job(db, product_job)
+            return
 
     except Exception as e:
         logger.error(f"Worker tick error: {e}", exc_info=True)
@@ -285,6 +294,7 @@ def _recover_stuck_jobs(db) -> None:
 
     threshold = datetime.utcnow() - timedelta(minutes=30)
 
+    # Recover stuck review scrape jobs
     stuck_jobs = (
         db.query(ScrapeJob)
         .filter(
@@ -295,10 +305,187 @@ def _recover_stuck_jobs(db) -> None:
     )
 
     for job in stuck_jobs:
-        logger.warning(f"Recovering stuck job {job.id}")
+        logger.warning(f"Recovering stuck review job {job.id}")
         job.status = "failed"
         job.error_message = "Job timed out (stuck for > 30 minutes)"
         job.completed_at = datetime.utcnow()
 
-    if stuck_jobs:
+    # Recover stuck product scan jobs
+    stuck_scan_jobs = (
+        db.query(ProductScanJob)
+        .filter(
+            ProductScanJob.status == JobStatus.RUNNING,
+            ProductScanJob.started_at < threshold,
+        )
+        .all()
+    )
+
+    for job in stuck_scan_jobs:
+        logger.warning(f"Recovering stuck product scan job {job.id}")
+        job.status = JobStatus.FAILED
+        job.error_message = "Job timed out (stuck for > 30 minutes)"
+        job.completed_at = datetime.utcnow()
+
+    if stuck_jobs or stuck_scan_jobs:
         db.commit()
+
+
+# ===== Product Scan Job Processing =====
+
+PRODUCT_SCAN_BATCH_SIZE = 50  # URLs per Apify call
+
+
+def _process_product_scan_job(db, job: ProductScanJob) -> None:
+    """
+    Process a product scan job.
+
+    Batches ASINs together for efficient Apify calls.
+    """
+    scan_service = ProductScanService(db)
+    channel_sku_service = ChannelSkuService(db)
+    apify_service = get_apify_service()
+
+    # Mark job as running
+    scan_service.start_job(job)
+
+    try:
+        # Process pending items in batches
+        while True:
+            pending_items = scan_service.get_pending_items(
+                job.id, limit=PRODUCT_SCAN_BATCH_SIZE
+            )
+            if not pending_items:
+                break
+
+            _process_product_scan_batch(
+                db=db,
+                job=job,
+                items=pending_items,
+                apify_service=apify_service,
+                scan_service=scan_service,
+                channel_sku_service=channel_sku_service,
+            )
+
+            # Delay between batches
+            if settings.apify_delay_seconds > 0:
+                import time
+                time.sleep(settings.apify_delay_seconds)
+
+        # Finalize job
+        scan_service.complete_job(job)
+
+        logger.info(
+            f"Product scan job {job.id} completed: "
+            f"{job.completed_listings} succeeded, {job.failed_listings} failed"
+        )
+
+    except Exception as e:
+        logger.error(f"Product scan job {job.id} failed: {e}", exc_info=True)
+        scan_service.fail_job(job, str(e))
+
+
+def _process_product_scan_batch(
+    db,
+    job: ProductScanJob,
+    items: list,
+    apify_service: ApifyService,
+    scan_service: ProductScanService,
+    channel_sku_service: ChannelSkuService,
+) -> None:
+    """
+    Process a batch of product scan items.
+
+    Calls Apify once for all ASINs in the batch for efficiency.
+    """
+    # Build ASIN list and item map
+    asins = [item.input_asin for item in items]
+    item_map = {item.input_asin: item for item in items}
+
+    # Mark all items as running
+    for item in items:
+        scan_service.mark_item_running(item)
+
+    logger.info(f"Processing batch of {len(asins)} ASINs for job {job.id}")
+
+    try:
+        # Call Apify (synchronous version for worker thread)
+        results = apify_service.scrape_product_details_sync(
+            asins=asins,
+            marketplace=job.marketplace,
+        )
+
+        # Process results
+        results_map = {}
+        for result in results:
+            # Map result to ASIN
+            result_asin = result.get("asin")
+            result_url = result.get("url", "")
+
+            # Try to extract ASIN from URL if not in result
+            if not result_asin and result_url:
+                import re
+                match = re.search(r"/dp/([A-Z0-9]{10})", result_url)
+                if match:
+                    result_asin = match.group(1)
+
+            if result_asin:
+                results_map[result_asin] = result
+
+        # Update each item
+        for asin, item in item_map.items():
+            result = results_map.get(asin)
+
+            if result:
+                status_code = result.get("statusCode", 0)
+
+                if status_code == 200:
+                    # Parse rating
+                    rating = ApifyService.parse_rating(result.get("productRating"))
+
+                    # Update item
+                    scan_service.complete_item(
+                        item=item,
+                        rating=rating,
+                        review_count=result.get("countReview"),
+                        title=result.get("title"),
+                        scraped_asin=result.get("asin"),
+                        raw_data=result,
+                    )
+
+                    # Update Channel SKU metrics
+                    channel_sku = item.channel_sku
+                    if channel_sku:
+                        channel_sku_service.update_metrics(
+                            channel_sku=channel_sku,
+                            rating=rating,
+                            review_count=result.get("countReview"),
+                            title=result.get("title"),
+                            scraped_asin=result.get("asin"),
+                            job_id=job.id,
+                        )
+
+                    logger.debug(f"ASIN {asin}: rating={rating}, reviews={result.get('countReview')}")
+
+                else:
+                    # Non-200 status
+                    error_msg = result.get("statusMessage", f"Status code: {status_code}")
+                    scan_service.fail_item(item, error_msg)
+                    logger.warning(f"ASIN {asin} failed: {error_msg}")
+
+            else:
+                # No result found for this ASIN
+                scan_service.fail_item(item, "No result returned from Apify")
+                logger.warning(f"ASIN {asin}: No result in Apify response")
+
+    except ApifyError as e:
+        # Apify call failed - mark all items as failed
+        logger.error(f"Apify batch call failed: {e}")
+        for item in items:
+            if item.status == ItemStatus.RUNNING:
+                scan_service.fail_item(item, str(e))
+
+    except Exception as e:
+        logger.error(f"Batch processing error: {e}", exc_info=True)
+        for item in items:
+            if item.status == ItemStatus.RUNNING:
+                scan_service.fail_item(item, str(e))

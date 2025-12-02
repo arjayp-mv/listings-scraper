@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Details - Amazon Reviews Scraper</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="header"></header>
+
+    <main class="main">
+        <div class="container">
+            <!-- Breadcrumb -->
+            <nav class="breadcrumb">
+                <a href="scans.html">Scan History</a>
+                <span class="breadcrumb-separator">/</span>
+                <span id="breadcrumb-name">Loading...</span>
+            </nav>
+
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="flex justify-between align-center">
+                    <div>
+                        <h1 class="page-title" id="page-title">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 12px; color: var(--primary-500);">
+                                <path d="M3 3v18h18"></path>
+                                <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path>
+                            </svg>
+                            <span id="job-name">Loading...</span>
+                        </h1>
+                        <p class="page-subtitle" id="page-subtitle">-</p>
+                    </div>
+                    <div class="flex gap-2" id="action-buttons">
+                        <!-- Buttons populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="alert-container"></div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid stats-grid-5" id="stats-container">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-total">-</div>
+                    <div class="stat-label">Total Items</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-completed">-</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-failed">-</div>
+                    <div class="stat-label">Failed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-avg-rating">-</div>
+                    <div class="stat-label">Avg Rating</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-total-reviews">-</div>
+                    <div class="stat-label">Total Reviews</div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="card mb-3" id="progress-card" style="display: none;">
+                <div class="card-body">
+                    <div class="flex justify-between mb-2">
+                        <span id="progress-status">Processing...</span>
+                        <span id="progress-percent">0%</span>
+                    </div>
+                    <div class="progress-bar-container large">
+                        <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="flex gap-2 align-center">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <select id="status-filter" class="form-control">
+                                <option value="">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="completed">Completed</option>
+                                <option value="failed">Failed</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="8" y1="6" x2="21" y2="6"></line>
+                            <line x1="8" y1="12" x2="21" y2="12"></line>
+                            <line x1="8" y1="18" x2="21" y2="18"></line>
+                            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                        </svg>
+                        Scan Results
+                    </h2>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    <table class="table" id="results-table">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>ASIN</th>
+                                <th>Status</th>
+                                <th>Rating</th>
+                                <th>Reviews</th>
+                                <th>Price</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-body">
+                            <tr>
+                                <td colspan="6" class="loading">
+                                    <div class="spinner"></div> Loading results...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-container" id="pagination-container"></div>
+        </div>
+    </main>
+
+    <script src="js/nav.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/scan-detail.js"></script>
+</body>
+</html>

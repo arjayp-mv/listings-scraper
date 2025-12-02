@@ -20,8 +20,12 @@ from .database import SessionLocal, engine, Base
 from .skus.router import router as skus_router
 from .jobs.router import router as jobs_router
 from .reviews.router import router as reviews_router
+from .channel_skus.router import router as channel_skus_router
+from .product_scans.router import router as product_scans_router
 from .jobs.models import ScrapeJob
 from .skus.models import Sku
+from .channel_skus.models import ChannelSku
+from .product_scans.models import ProductScanJob
 from .workers.scraper_worker import start_worker, stop_worker
 
 
@@ -78,6 +82,8 @@ app.add_middleware(
 app.include_router(skus_router)
 app.include_router(jobs_router)
 app.include_router(reviews_router)
+app.include_router(channel_skus_router)
+app.include_router(product_scans_router)
 
 
 # ===== Dashboard Endpoint =====
@@ -125,6 +131,21 @@ async def get_dashboard_stats():
             for j in recent_jobs
         ]
 
+        # Channel SKU Metrics stats
+        total_channel_skus = db.query(func.count(ChannelSku.id)).scalar() or 0
+
+        # Product scan stats
+        scan_status_counts = dict(
+            db.query(ProductScanJob.status, func.count(ProductScanJob.id))
+            .group_by(ProductScanJob.status)
+            .all()
+        )
+        total_scans = sum(scan_status_counts.values())
+        total_listings_scanned = (
+            db.query(func.sum(ProductScanJob.completed_listings))
+            .scalar() or 0
+        )
+
         return {
             "total_jobs": sum(status_counts.values()),
             "queued_jobs": status_counts.get("queued", 0),
@@ -134,6 +155,12 @@ async def get_dashboard_stats():
             "total_reviews": int(total_reviews),
             "total_skus": total_skus,
             "recent_jobs": recent_jobs_data,
+            # Channel SKU Metrics stats
+            "total_channel_skus": total_channel_skus,
+            "total_product_scans": total_scans,
+            "total_listings_scanned": int(total_listings_scanned),
+            "product_scan_queued": scan_status_counts.get("queued", 0),
+            "product_scan_running": scan_status_counts.get("running", 0),
         }
     finally:
         db.close()

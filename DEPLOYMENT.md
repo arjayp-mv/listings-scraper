@@ -191,8 +191,42 @@ sudo systemctl reload nginx
 
 1. Open browser to `http://server-ip:8080`
 2. Dashboard should load with dark theme
-3. Try creating a test SKU on the SKUs page
+3. Try creating a test scrape job via Product Reviews > New Scrape
 4. API documentation available at `http://server-ip:8080/docs`
+
+---
+
+## Application Features
+
+### 1. Product Reviews (Review Scraping)
+
+Scrape Amazon reviews for analysis. Reviews are formatted as "Title + Text" for copying into AI tools.
+
+**Navigation:** Product Reviews dropdown
+- **New Scrape**: Create a scrape job with ASINs and star filters
+- **Jobs**: View all scrape jobs and their status
+- **SKU Reviews**: Organize reviews by product SKU
+
+**Workflow:**
+1. Go to New Scrape, enter ASINs and select star filters
+2. Job queues and background worker processes it
+3. View results in job detail page
+4. Copy formatted reviews or export to Excel
+
+### 2. Channel SKU Metrics (Product Tracking)
+
+Track product ratings/review counts over time across multiple Amazon marketplaces.
+
+**Navigation:** Channel SKU Metrics dropdown
+- **New Scan**: Start a scan job for your tracked listings
+- **Scan History**: View past scan jobs and results
+- **All Listings**: Manage all tracked Channel SKUs
+- **Parent SKUs**: View metrics aggregated by parent SKU
+
+**Workflow:**
+1. Import Channel SKUs via CSV (All Listings > Import CSV)
+2. Run a scan job (New Scan)
+3. View results to track rating/review changes over time
 
 ---
 
@@ -206,21 +240,33 @@ listings-scraper/
 │   │   ├── config.py        # Environment configuration
 │   │   ├── database.py      # SQLAlchemy setup
 │   │   ├── pagination.py    # Pagination utilities
-│   │   ├── jobs/            # Jobs domain (models, router, service)
-│   │   ├── skus/            # SKUs domain
+│   │   ├── jobs/            # Scrape jobs domain (models, router, service)
+│   │   ├── skus/            # SKUs domain (for review scraping)
 │   │   ├── reviews/         # Reviews domain
+│   │   ├── channel_skus/    # Channel SKU domain (product metrics tracking)
+│   │   ├── product_scans/   # Product scan jobs domain
 │   │   ├── apify/           # Apify API integration
 │   │   └── workers/         # Background scraper worker
 │   ├── requirements.txt     # Python dependencies
 │   └── .env                 # Environment config (CREATE THIS)
 ├── frontend/
 │   ├── index.html           # Dashboard
-│   ├── new-scrape.html      # New scrape form
-│   ├── jobs.html            # Jobs list
+│   ├── new-scrape.html      # New review scrape form
+│   ├── jobs.html            # Review scrape jobs list
 │   ├── job-detail.html      # Job detail with copy/export
-│   ├── skus.html            # SKU management
+│   ├── skus.html            # SKU management (for reviews)
+│   ├── sku-reviews.html     # Reviews for a specific SKU
+│   ├── new-scan.html        # New product metrics scan
+│   ├── scans.html           # Product scan history
+│   ├── scan-detail.html     # Scan detail view
+│   ├── listings.html        # All Channel SKU listings
+│   ├── skus-list.html       # Parent SKUs overview
+│   ├── sku-detail.html      # Channel SKUs for a parent SKU
 │   ├── css/styles.css       # Dark theme styles
-│   └── js/                  # JavaScript files
+│   └── js/
+│       ├── nav.js           # Shared navigation component
+│       ├── api.js           # API utilities
+│       └── *.js             # Page-specific JavaScript
 ├── database_setup.sql       # Database schema (use export for data)
 ├── .env.example             # Template for .env file
 ├── README.md                # General documentation
@@ -256,6 +302,8 @@ No additional cron jobs or schedulers needed.
 
 ## API Endpoints Reference
 
+### Product Reviews (Scraping)
+
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/api/jobs` | POST | Create new scrape job |
@@ -268,6 +316,28 @@ No additional cron jobs or schedulers needed.
 | `/api/skus` | GET | List SKUs |
 | `/api/skus` | POST | Create SKU |
 | `/api/skus/search` | GET | Search SKUs by code |
+| `/api/skus/{id}/reviews` | GET | Get reviews for a SKU |
+
+### Channel SKU Metrics (Product Tracking)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/channel-skus` | GET | List all channel SKUs |
+| `/api/channel-skus` | POST | Create channel SKU |
+| `/api/channel-skus/import` | POST | Bulk import from CSV |
+| `/api/channel-skus/export` | GET | Export to CSV |
+| `/api/channel-skus/{id}` | GET | Get channel SKU details |
+| `/api/channel-skus/{id}` | PUT | Update channel SKU |
+| `/api/channel-skus/{id}` | DELETE | Delete channel SKU |
+| `/api/product-scans` | POST | Create product scan job |
+| `/api/product-scans` | GET | List scan jobs |
+| `/api/product-scans/{id}` | GET | Get scan details |
+| `/api/product-scans/{id}/cancel` | POST | Cancel running scan |
+
+### Dashboard
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
 | `/api/dashboard/stats` | GET | Dashboard statistics |
 | `/docs` | GET | Interactive API documentation |
 

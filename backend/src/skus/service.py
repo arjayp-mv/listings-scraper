@@ -12,6 +12,7 @@ from sqlalchemy import func
 
 from .models import Sku
 from ..jobs.models import ScrapeJob
+from ..channel_skus.models import ChannelSku
 
 
 class SkuService:
@@ -148,3 +149,63 @@ class SkuService:
             .scalar()
         )
         return result or 0
+
+    def list_with_channel_sku_stats(
+        self, offset: int = 0, limit: int = 50, search: Optional[str] = None
+    ) -> tuple[List[dict], int]:
+        """
+        List SKUs with aggregated Channel SKU statistics.
+
+        Args:
+            offset: Number of items to skip
+            limit: Maximum items to return
+            search: Optional search string to filter by sku_code
+
+        Returns:
+            Tuple of (list of dicts with stats, total count)
+        """
+        # Base query with aggregations
+        query = (
+            self.db.query(
+                Sku.id,
+                Sku.sku_code,
+                Sku.description,
+                Sku.created_at,
+                func.count(ChannelSku.id).label("channel_sku_count"),
+                func.avg(ChannelSku.latest_rating).label("avg_rating"),
+                func.sum(ChannelSku.latest_review_count).label("total_reviews"),
+                func.max(ChannelSku.last_scraped_at).label("last_scraped_at"),
+            )
+            .outerjoin(ChannelSku, ChannelSku.sku_id == Sku.id)
+            .group_by(Sku.id, Sku.sku_code, Sku.description, Sku.created_at)
+        )
+
+        # Apply search filter
+        if search:
+            query = query.filter(Sku.sku_code.ilike(f"%{search}%"))
+
+        # Get total count before pagination
+        total_query = self.db.query(Sku)
+        if search:
+            total_query = total_query.filter(Sku.sku_code.ilike(f"%{search}%"))
+        total = total_query.count()
+
+        # Apply ordering and pagination
+        query = query.order_by(Sku.sku_code)
+        results = query.offset(offset).limit(limit).all()
+
+        # Convert to dicts
+        items = []
+        for row in results:
+            items.append({
+                "id": row.id,
+                "sku_code": row.sku_code,
+                "description": row.description,
+                "created_at": row.created_at,
+                "channel_sku_count": row.channel_sku_count or 0,
+                "avg_rating": float(row.avg_rating) if row.avg_rating else None,
+                "total_reviews": row.total_reviews or 0,
+                "last_scraped_at": row.last_scraped_at,
+            })
+
+        return items, total

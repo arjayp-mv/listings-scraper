@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKU Detail - Amazon Reviews Scraper</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="header"></header>
+
+    <main class="main">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div class="flex justify-between align-center">
+                    <div>
+                        <div class="breadcrumb mb-2">
+                            <a href="skus-list.html">Parent SKUs</a>
+                            <span class="breadcrumb-separator">/</span>
+                            <span id="breadcrumb-sku">Loading...</span>
+                        </div>
+                        <h1 class="page-title">
+                            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 12px; color: var(--primary-500);">
+                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                            </svg>
+                            <span id="page-title-sku">Loading...</span>
+                        </h1>
+                        <p class="page-subtitle">Channel SKUs for this parent SKU</p>
+                    </div>
+                    <a href="skus-list.html" class="btn btn-secondary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
+                        Back to SKUs
+                    </a>
+                </div>
+            </div>
+
+            <div id="alert-container"></div>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid stats-grid-4" id="stats-container">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-total-channel-skus">-</div>
+                    <div class="stat-label">Channel SKUs</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-avg-rating">-</div>
+                    <div class="stat-label">Avg Rating</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-total-reviews">-</div>
+                    <div class="stat-label">Total Reviews</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-marketplaces">-</div>
+                    <div class="stat-label">Marketplaces</div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="flex gap-2 align-center flex-wrap">
+                        <div class="form-group" style="margin-bottom: 0; flex: 1; min-width: 200px;">
+                            <input type="text" id="search-input" class="form-control" placeholder="Search Channel SKU or ASIN...">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <select id="marketplace-filter" class="form-control">
+                                <option value="">All Marketplaces</option>
+                                <option value="com">Amazon.com (US)</option>
+                                <option value="co.uk">Amazon.co.uk (UK)</option>
+                                <option value="de">Amazon.de (Germany)</option>
+                                <option value="fr">Amazon.fr (France)</option>
+                                <option value="it">Amazon.it (Italy)</option>
+                                <option value="es">Amazon.es (Spain)</option>
+                                <option value="ca">Amazon.ca (Canada)</option>
+                                <option value="com.au">Amazon.com.au (Australia)</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <select id="rating-filter" class="form-control">
+                                <option value="">All Ratings</option>
+                                <option value="4.5">4.5+ Stars</option>
+                                <option value="4">4+ Stars</option>
+                                <option value="3.5">3.5+ Stars</option>
+                                <option value="3">3+ Stars</option>
+                                <option value="2">2+ Stars</option>
+                                <option value="1">1+ Stars</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-secondary" id="clear-filters-btn">Clear</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Channel SKUs Table -->
+            <div class="card">
+                <div class="card-body" style="padding: 0;">
+                    <table class="table" id="channel-skus-table">
+                        <thead>
+                            <tr>
+                                <th>Channel SKU</th>
+                                <th>ASIN</th>
+                                <th>Product Title</th>
+                                <th>Marketplace</th>
+                                <th>Rating</th>
+                                <th>Reviews</th>
+                                <th>Last Scanned</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="channel-skus-body">
+                            <tr>
+                                <td colspan="8" class="loading">
+                                    <div class="spinner"></div> Loading Channel SKUs...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-container" id="pagination-container"></div>
+        </div>
+    </main>
+
+    <script src="js/nav.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/sku-detail.js"></script>
+</body>
+</html>

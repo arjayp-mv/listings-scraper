@@ -125,6 +125,118 @@ CREATE TABLE IF NOT EXISTS asin_history (
 ) ENGINE=InnoDB;
 
 -- =============================================================================
+-- Performance Indexes for Existing Tables (Add if not exists)
+-- =============================================================================
+-- Run these on existing databases to improve performance with 1000+ SKUs
+
+-- Composite index for worker efficiency (job_asin)
+-- ALTER TABLE job_asin ADD INDEX idx_job_asin_job_status (job_id, status);
+
+-- Review table indexes for large datasets
+-- ALTER TABLE review ADD INDEX idx_review_rating (rating);
+-- ALTER TABLE review ADD INDEX idx_review_date (date);
+
+
+-- =============================================================================
+-- Channel SKUs Table
+-- =============================================================================
+-- Purpose: Store Channel SKUs with their ASIN mapping per marketplace
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS channel_sku (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sku_id BIGINT NULL,                                -- Optional FK to sku table
+    channel_sku_code VARCHAR(100) NOT NULL,            -- Channel SKU identifier
+    marketplace VARCHAR(10) NOT NULL DEFAULT 'com',
+    current_asin VARCHAR(15) NOT NULL,
+    product_title VARCHAR(500) NULL,
+    latest_rating DECIMAL(2,1) NULL,                   -- e.g., 4.5
+    latest_review_count INT NULL,
+    last_scraped_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (sku_id) REFERENCES sku(id) ON DELETE SET NULL,
+    UNIQUE KEY unique_channel_sku_marketplace (channel_sku_code, marketplace),
+    INDEX idx_channel_sku_sku_id (sku_id),
+    INDEX idx_channel_sku_rating (latest_rating),
+    INDEX idx_channel_sku_marketplace (marketplace)
+) ENGINE=InnoDB;
+
+-- =============================================================================
+-- Channel SKU ASIN History Table
+-- =============================================================================
+-- Purpose: Track ASIN changes for Channel SKUs over time
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS channel_sku_asin_history (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    channel_sku_id BIGINT NOT NULL,
+    asin VARCHAR(15) NOT NULL,
+    changed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    changed_by_job_id BIGINT NULL,
+
+    FOREIGN KEY (channel_sku_id) REFERENCES channel_sku(id) ON DELETE CASCADE,
+    INDEX idx_asin_history_channel_sku (channel_sku_id)
+) ENGINE=InnoDB;
+
+-- =============================================================================
+-- Product Scan Jobs Table
+-- =============================================================================
+-- Purpose: Track product metrics scraping jobs
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS product_scan_job (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    job_name VARCHAR(255) NOT NULL,
+    status ENUM('queued', 'running', 'completed', 'partial', 'failed', 'cancelled')
+        DEFAULT 'queued',
+    marketplace VARCHAR(10) NOT NULL DEFAULT 'com',
+    total_listings INT DEFAULT 0,
+    completed_listings INT DEFAULT 0,
+    failed_listings INT DEFAULT 0,
+    error_message TEXT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    started_at TIMESTAMP NULL,
+    completed_at TIMESTAMP NULL,
+
+    INDEX idx_product_scan_status (status),
+    INDEX idx_product_scan_created (created_at DESC)
+) ENGINE=InnoDB;
+
+-- =============================================================================
+-- Product Scan Items Table
+-- =============================================================================
+-- Purpose: Individual listings within a product scan job
+-- =============================================================================
+CREATE TABLE IF NOT EXISTS product_scan_item (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    job_id BIGINT NOT NULL,
+    channel_sku_id BIGINT NOT NULL,
+    input_asin VARCHAR(15) NOT NULL,
+    status ENUM('pending', 'running', 'completed', 'failed') DEFAULT 'pending',
+    scraped_rating DECIMAL(2,1) NULL,
+    scraped_review_count INT NULL,
+    scraped_title VARCHAR(500) NULL,
+    scraped_asin VARCHAR(15) NULL,                     -- ASIN returned by Amazon (for change detection)
+    apify_run_id VARCHAR(50) NULL,
+    error_message TEXT NULL,
+    raw_data JSON NULL,
+    started_at TIMESTAMP NULL,
+    completed_at TIMESTAMP NULL,
+
+    FOREIGN KEY (job_id) REFERENCES product_scan_job(id) ON DELETE CASCADE,
+    FOREIGN KEY (channel_sku_id) REFERENCES channel_sku(id) ON DELETE CASCADE,
+    INDEX idx_scan_item_job_status (job_id, status),   -- Composite for worker queries
+    INDEX idx_scan_item_channel_sku (channel_sku_id)
+) ENGINE=InnoDB;
+
+-- =============================================================================
+-- Update channel_sku_asin_history FK after product_scan_job exists
+-- =============================================================================
+-- Note: Run this ALTER after creating the tables if you want the FK:
+-- ALTER TABLE channel_sku_asin_history
+--     ADD FOREIGN KEY (changed_by_job_id) REFERENCES product_scan_job(id) ON DELETE SET NULL;
+
+
+-- =============================================================================
 -- Sample Data (Optional - Remove in Production)
 -- =============================================================================
 -- Uncomment below to insert sample SKU for testing

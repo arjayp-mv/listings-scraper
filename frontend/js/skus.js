@@ -72,16 +72,21 @@ function renderSkus(skus, searchValue = null) {
 
     tbody.innerHTML = skus.map(sku => `
         <tr>
-            <td style="font-weight: 500;">${escapeHtml(sku.sku_code)}</td>
+            <td style="font-weight: 500;">
+                <a href="sku-reviews.html?id=${sku.id}" style="color: var(--primary); text-decoration: none;">
+                    ${escapeHtml(sku.sku_code)}
+                </a>
+            </td>
             <td>${sku.description ? escapeHtml(sku.description) : '<span class="text-muted">-</span>'}</td>
             <td>
-                <a href="jobs.html?sku_id=${sku.id}" style="color: var(--primary);">
+                <a href="jobs.html?sku_id=${sku.id}" style="color: var(--text-muted);">
                     ${sku.job_count} jobs
                 </a>
             </td>
             <td>${formatDate(sku.created_at)}</td>
             <td>
                 <div class="flex gap-1">
+                    <a href="sku-reviews.html?id=${sku.id}" class="btn btn-primary btn-sm">View Reviews</a>
                     <button class="btn btn-secondary btn-sm" onclick="editSku(${sku.id})">Edit</button>
                     <button class="btn btn-danger btn-sm" onclick="deleteSku(${sku.id})">Delete</button>
                 </div>

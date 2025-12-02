@@ -77,5 +77,36 @@ class ApifyActorType(str, Enum):
     """
 
     REVIEWS = "reviews"
-    # PRODUCT_DETAILS = "product_details"  # Future
+    PRODUCT_DETAILS = "product_details"
     # SEARCH_RESULTS = "search_results"    # Future
+
+
+# ===== Product Details Scraper Schemas =====
+
+
+class ApifyProductInput(BaseModel):
+    """
+    Input configuration for Apify product details scraper.
+
+    Matches the input schema of axesso_data~amazon-product-details-scraper.
+    """
+
+    urls: List[str]  # List of Amazon product URLs
+
+
+class ApifyProductResult(BaseModel):
+    """
+    Single product result from Apify product details scraper.
+
+    Maps to the actor's output schema.
+    """
+
+    statusCode: Optional[int] = None
+    statusMessage: Optional[str] = None
+    productRating: Optional[str] = None  # "4.5 out of 5 stars" - needs parsing
+    countReview: Optional[int] = None
+    asin: Optional[str] = None
+    title: Optional[str] = None
+    price: Optional[str] = None
+    currency: Optional[str] = None
+    url: Optional[str] = None
