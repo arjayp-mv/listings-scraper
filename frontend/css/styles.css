@@ -585,6 +585,35 @@ select.form-control {
     -moz-appearance: textfield;
 }
 
+/* Inline Edit Select - for editable table cells with dropdown */
+.inline-edit-select {
+    padding: 4px 24px 4px 8px;
+    font-size: 0.8125rem;
+    font-family: inherit;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-tertiary);
+    transition: all var(--transition-fast);
+    color: var(--text-primary);
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 4px center;
+    background-size: 14px;
+}
+
+.inline-edit-select:focus {
+    outline: none;
+    border-color: var(--primary-400);
+    box-shadow: 0 0 0 2px var(--primary-50);
+    background-color: var(--bg-secondary);
+}
+
+.inline-edit-select:hover {
+    border-color: var(--border-hover);
+}
+
 .form-hint {
     font-size: 0.8125rem;
     color: var(--text-muted);
@@ -2247,4 +2276,70 @@ input[type="range"]::-webkit-slider-thumb:hover {
         width: 80px;
         height: 80px;
     }
+}
+
+/* ===== Search Autocomplete Suggestions ===== */
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-top: none;
+    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    max-height: 280px;
+    overflow-y: auto;
+    z-index: 100;
+    display: none;
+    box-shadow: var(--shadow-lg);
+}
+
+.search-suggestions.show {
+    display: block;
+}
+
+.search-suggestion-header {
+    padding: 6px 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.search-suggestion {
+    padding: 10px 12px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border-color);
+    transition: background var(--transition-fast);
+}
+
+.search-suggestion:last-child {
+    border-bottom: none;
+}
+
+.search-suggestion:hover {
+    background: var(--gray-200);
+}
+
+.search-suggestion .suggestion-primary {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.search-suggestion .suggestion-secondary {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+}
+
+.search-suggestion.search-all {
+    background: var(--bg-secondary);
+    color: var(--primary-500);
+}
+
+.search-suggestion.search-all:hover {
+    background: var(--gray-200);
 }

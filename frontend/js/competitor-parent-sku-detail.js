@@ -235,7 +235,7 @@ function renderCompetitors(competitors) {
             '<td>' + formatCurrency(data.unit_price, data.currency) + '</td>' +
             '<td>' + formatRating(data.rating) + '</td>' +
             '<td>' + formatNumber(data.review_count) + '</td>' +
-            '<td>' + formatSchedule(comp.schedule) + '</td>' +
+            '<td>' + renderScheduleDropdown(comp.id, comp.schedule) + '</td>' +
             '<td>' + formatDate(lastScraped) + '</td>' +
             '<td>' +
                 '<a href="competitor-detail.html?id=' + comp.id + '" class="btn btn-secondary btn-sm">View</a> ' +
@@ -507,6 +507,40 @@ async function updatePackSize(competitorId, newPackSize) {
     } catch (error) {
         console.error('Failed to update pack size:', error);
         alert('Failed to update pack size: ' + error.message);
+        loadCompetitors(); // Reload to reset value
+    }
+}
+
+function renderScheduleDropdown(competitorId, currentSchedule) {
+    const schedules = [
+        { value: '', label: 'Manual' },
+        { value: 'daily', label: 'Daily' },
+        { value: 'every_2_days', label: 'Every 2 Days' },
+        { value: 'every_3_days', label: 'Every 3 Days' },
+        { value: 'weekly', label: 'Weekly' },
+        { value: 'monthly', label: 'Monthly' }
+    ];
+
+    const normalizedCurrent = (!currentSchedule || currentSchedule === 'none') ? '' : currentSchedule;
+
+    let html = '<select class="inline-edit-select" onchange="updateSchedule(' + competitorId + ', this.value)">';
+    for (const s of schedules) {
+        const selected = s.value === normalizedCurrent ? ' selected' : '';
+        html += '<option value="' + s.value + '"' + selected + '>' + s.label + '</option>';
+    }
+    html += '</select>';
+    return html;
+}
+
+async function updateSchedule(competitorId, newSchedule) {
+    try {
+        await api.updateCompetitorSchedule(competitorId, {
+            schedule: newSchedule || 'none'
+        });
+        // No need to reload - inline update successful
+    } catch (error) {
+        console.error('Failed to update schedule:', error);
+        alert('Failed to update schedule: ' + error.message);
         loadCompetitors(); // Reload to reset value
     }
 }

@@ -53,6 +53,7 @@
             <div class="tabs">
                 <button class="tab-btn active" data-tab="scheduled">Scheduled Competitors</button>
                 <button class="tab-btn" data-tab="jobs">Recent Jobs</button>
+                <button class="tab-btn" data-tab="add">Add to Schedule</button>
             </div>
 
             <!-- Scheduled Competitors Tab -->
@@ -60,19 +61,27 @@
                 <div class="card">
                     <div class="card-header">
                         <h2 class="card-title">Scheduled Competitors</h2>
-                        <select id="schedule-filter" class="form-control" style="width: auto;">
-                            <option value="">All Schedules</option>
-                            <option value="daily">Daily</option>
-                            <option value="every_2_days">Every 2 Days</option>
-                            <option value="every_3_days">Every 3 Days</option>
-                            <option value="weekly">Weekly</option>
-                            <option value="monthly">Monthly</option>
-                        </select>
+                        <div class="header-actions" style="display: flex; gap: 8px; align-items: center;">
+                            <button class="btn btn-secondary btn-sm" id="bulk-schedule-btn" style="display: none;">
+                                Set Schedule (<span id="selected-count">0</span>)
+                            </button>
+                            <select id="schedule-filter" class="form-control" style="width: auto;">
+                                <option value="">All Schedules</option>
+                                <option value="daily">Daily</option>
+                                <option value="every_2_days">Every 2 Days</option>
+                                <option value="every_3_days">Every 3 Days</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="monthly">Monthly</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="card-body" style="padding: 0;">
                         <table class="table" id="scheduled-table">
                             <thead>
                                 <tr>
+                                    <th style="width: 40px;">
+                                        <input type="checkbox" id="select-all-scheduled" onchange="toggleSelectAll(this)">
+                                    </th>
                                     <th>ASIN</th>
                                     <th>Parent SKU</th>
                                     <th>Marketplace</th>
@@ -85,7 +94,7 @@
                             </thead>
                             <tbody id="scheduled-body">
                                 <tr>
-                                    <td colspan="8" class="loading">
+                                    <td colspan="9" class="loading">
                                         <div class="spinner"></div> Loading...
                                     </td>
                                 </tr>
@@ -137,8 +146,98 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Add to Schedule Tab -->
+            <div class="tab-content" id="tab-add">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Add Existing Competitors to Schedule</h2>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted" style="margin-bottom: 16px;">Select competitors without a schedule and set their scraping frequency.</p>
+
+                        <div class="form-row" style="margin-bottom: 16px;">
+                            <div class="form-group" style="flex: 2; position: relative;">
+                                <label for="add-search-filter">Search by SKU or ASIN</label>
+                                <input type="text" id="add-search-filter" class="form-control"
+                                       placeholder="Type to search SKU or ASIN..." autocomplete="off">
+                                <div id="search-suggestions" class="search-suggestions"></div>
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <label for="add-schedule-select">Set Schedule</label>
+                                <select id="add-schedule-select" class="form-control">
+                                    <option value="daily">Daily</option>
+                                    <option value="every_2_days">Every 2 Days</option>
+                                    <option value="every_3_days">Every 3 Days</option>
+                                    <option value="weekly" selected>Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="flex: 0; align-self: flex-end;">
+                                <button class="btn btn-primary" id="apply-schedule-btn" disabled>
+                                    Apply to Selected (<span id="add-selected-count">0</span>)
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body" style="padding: 0;">
+                        <table class="table" id="unscheduled-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">
+                                        <input type="checkbox" id="select-all-unscheduled" onchange="toggleSelectAllUnscheduled(this)">
+                                    </th>
+                                    <th>ASIN</th>
+                                    <th>Title</th>
+                                    <th>Parent SKU</th>
+                                    <th>Marketplace</th>
+                                    <th>Last Scraped</th>
+                                </tr>
+                            </thead>
+                            <tbody id="unscheduled-body">
+                                <tr>
+                                    <td colspan="6" class="loading">
+                                        <div class="spinner"></div> Loading...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer">
+                        <div class="pagination" id="unscheduled-pagination"></div>
+                    </div>
+                </div>
+            </div>
         </div>
     </main>
+
+    <!-- Schedule Modal -->
+    <div id="schedule-modal" class="modal">
+        <div class="modal-backdrop" onclick="closeScheduleModal()"></div>
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="schedule-modal-title">Set Schedule</h3>
+                <button class="modal-close" onclick="closeScheduleModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="schedule-modal-select">Scraping Frequency</label>
+                    <select id="schedule-modal-select" class="form-control">
+                        <option value="">None (Manual)</option>
+                        <option value="daily">Daily</option>
+                        <option value="every_2_days">Every 2 Days</option>
+                        <option value="every_3_days">Every 3 Days</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeScheduleModal()">Cancel</button>
+                <button class="btn btn-primary" id="schedule-modal-save">Save</button>
+            </div>
+        </div>
+    </div>
 
     <script src="js/nav.js"></script>
     <script src="js/api.js"></script>

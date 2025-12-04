@@ -6,9 +6,14 @@
 
 let scheduledPage = 1;
 let jobsPage = 1;
+let unscheduledPage = 1;
 const pageSize = 20;
 let currentScheduleFilter = '';
 let currentJobStatusFilter = '';
+let currentAddSkuFilter = '';
+let currentSearchQuery = '';
+let searchDebounceTimer = null;
+let scheduleModalIds = [];  // Competitor IDs for modal
 
 document.addEventListener('DOMContentLoaded', () => {
     loadStats();
@@ -48,6 +53,15 @@ function setupEventListeners() {
 
     // Scrape all button
     document.getElementById('scrape-all-btn').addEventListener('click', scrapeAllScheduled);
+
+    // Bulk schedule button
+    document.getElementById('bulk-schedule-btn').addEventListener('click', bulkSetSchedule);
+
+    // Apply schedule button
+    document.getElementById('apply-schedule-btn').addEventListener('click', applyScheduleToSelected);
+
+    // Schedule modal save button
+    document.getElementById('schedule-modal-save').addEventListener('click', saveScheduleModal);
 }
 
 function switchTab(tab) {
@@ -60,6 +74,9 @@ function switchTab(tab) {
 
     if (tab === 'jobs') {
         loadJobs();
+    } else if (tab === 'add') {
+        setupSearchInput();
+        loadUnscheduledCompetitors();
     } else {
         loadScheduledCompetitors();
     }
@@ -80,7 +97,7 @@ async function loadStats() {
 
 async function loadScheduledCompetitors() {
     const tbody = document.getElementById('scheduled-body');
-    tbody.innerHTML = '<tr><td colspan="8" class="loading"><div class="spinner"></div> Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="loading"><div class="spinner"></div> Loading...</td></tr>';
 
     try {
         // Get all scheduled competitors with data to show last scraped date
@@ -91,7 +108,7 @@ async function loadScheduledCompetitors() {
         renderPagination('scheduled', result.total || 0, result.page || 1, result.per_page || pageSize);
     } catch (error) {
         console.error('Failed to load scheduled competitors:', error);
-        tbody.innerHTML = '<tr><td colspan="8" class="empty-state">Failed to load data</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="empty-state">Failed to load data</td></tr>';
     }
 }
 
@@ -105,7 +122,7 @@ function renderScheduledCompetitors(competitors) {
     }
 
     if (!filtered || filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="empty-state">No scheduled competitors found</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="empty-state">No scheduled competitors found</td></tr>';
         return;
     }
 
@@ -119,6 +136,9 @@ function renderScheduledCompetitors(competitors) {
         const statusText = isDue ? 'Due' : 'Scheduled';
 
         html += '<tr>' +
+            '<td>' +
+                '<input type="checkbox" class="scheduled-checkbox" data-competitor-id="' + comp.id + '" onchange="updateSelectedCount()">' +
+            '</td>' +
             '<td>' +
                 '<a href="competitor-detail.html?id=' + comp.id + '" class="text-link font-medium">' +
                     escapeHtml(comp.asin) +
@@ -137,6 +157,9 @@ function renderScheduledCompetitors(competitors) {
         '</tr>';
     }
     tbody.innerHTML = html;
+    // Reset select-all checkbox
+    document.getElementById('select-all-scheduled').checked = false;
+    updateSelectedCount();
 }
 
 async function loadJobs() {
@@ -208,34 +231,32 @@ async function scrapeCompetitor(id) {
     }
 }
 
-async function editSchedule(id, currentSchedule) {
-    const schedules = [
-        { value: '', label: 'None (Manual)' },
-        { value: 'daily', label: 'Daily' },
-        { value: 'every_2_days', label: 'Every 2 Days' },
-        { value: 'every_3_days', label: 'Every 3 Days' },
-        { value: 'weekly', label: 'Weekly' },
-        { value: 'monthly', label: 'Monthly' }
-    ];
+function editSchedule(id, currentSchedule) {
+    openScheduleModal([id], currentSchedule, 'Edit Schedule');
+}
 
-    const options = schedules.map(s =>
-        (s.value === currentSchedule ? '> ' : '  ') + s.label
-    ).join('\n');
+// ===== Schedule Modal Functions =====
 
-    const newSchedule = prompt('Select new schedule:\n\n' + options + '\n\nEnter: daily, every_2_days, every_3_days, weekly, monthly, or leave empty for manual:', currentSchedule);
+function openScheduleModal(ids, currentSchedule, title) {
+    scheduleModalIds = ids;
+    document.getElementById('schedule-modal-title').textContent = title || 'Set Schedule';
+    document.getElementById('schedule-modal-select').value = currentSchedule || '';
+    document.getElementById('schedule-modal').classList.add('active');
+}
 
-    if (newSchedule === null) return; // Cancelled
+function closeScheduleModal() {
+    document.getElementById('schedule-modal').classList.remove('active');
+    scheduleModalIds = [];
+}
 
-    const validSchedules = ['', 'daily', 'every_2_days', 'every_3_days', 'weekly', 'monthly'];
-    if (!validSchedules.includes(newSchedule)) {
-        alert('Invalid schedule. Please enter one of: daily, every_2_days, every_3_days, weekly, monthly, or leave empty.');
-        return;
-    }
+async function saveScheduleModal() {
+    const schedule = document.getElementById('schedule-modal-select').value;
 
     try {
-        await api.updateCompetitorSchedule(id, {
-            schedule: newSchedule || 'none'
-        });
+        for (const id of scheduleModalIds) {
+            await api.updateCompetitorSchedule(id, { schedule: schedule || 'none' });
+        }
+        closeScheduleModal();
         loadScheduledCompetitors();
         loadStats();
     } catch (error) {
@@ -253,7 +274,12 @@ function renderPagination(type, total, page, size) {
         return;
     }
 
-    const goFunc = type === 'scheduled' ? 'goToScheduledPage' : 'goToJobsPage';
+    const goFuncs = {
+        scheduled: 'goToScheduledPage',
+        jobs: 'goToJobsPage',
+        unscheduled: 'goToUnscheduledPage'
+    };
+    const goFunc = goFuncs[type] || 'goToScheduledPage';
 
     let html = '';
     if (page > 1) {
@@ -315,6 +341,259 @@ function formatDateTime(dateStr) {
     if (!dateStr) return '-';
     const date = new Date(dateStr);
     return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// ===== Selection Functions =====
+
+function toggleSelectAll(checkbox) {
+    document.querySelectorAll('.scheduled-checkbox').forEach(cb => {
+        cb.checked = checkbox.checked;
+    });
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    const checkboxes = document.querySelectorAll('.scheduled-checkbox:checked');
+    const count = checkboxes.length;
+    document.getElementById('selected-count').textContent = count;
+    document.getElementById('bulk-schedule-btn').style.display = count > 0 ? 'inline-flex' : 'none';
+}
+
+function bulkSetSchedule() {
+    const checkboxes = document.querySelectorAll('.scheduled-checkbox:checked');
+    const ids = Array.from(checkboxes).map(cb => parseInt(cb.dataset.competitorId));
+
+    if (ids.length === 0) {
+        alert('Please select at least one competitor');
+        return;
+    }
+
+    openScheduleModal(ids, '', 'Set Schedule for ' + ids.length + ' competitor(s)');
+}
+
+// ===== Add to Schedule Tab Functions =====
+
+function setupSearchInput() {
+    const input = document.getElementById('add-search-filter');
+    const suggestions = document.getElementById('search-suggestions');
+
+    // Only setup once
+    if (input.dataset.initialized) return;
+    input.dataset.initialized = 'true';
+
+    input.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+
+        // Clear previous timer
+        if (searchDebounceTimer) {
+            clearTimeout(searchDebounceTimer);
+        }
+
+        if (query.length < 2) {
+            suggestions.classList.remove('show');
+            // If cleared, reset to show all
+            if (query.length === 0) {
+                currentSearchQuery = '';
+                currentAddSkuFilter = '';
+                unscheduledPage = 1;
+                loadUnscheduledCompetitors();
+            }
+            return;
+        }
+
+        // Debounce search - wait 300ms after typing stops
+        searchDebounceTimer = setTimeout(() => {
+            searchForSuggestions(query);
+        }, 300);
+    });
+
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.form-group')) {
+            suggestions.classList.remove('show');
+        }
+    });
+}
+
+async function searchForSuggestions(query) {
+    const suggestions = document.getElementById('search-suggestions');
+
+    try {
+        // Search competitors by ASIN or title (in parallel)
+        const [competitorResult, skuResult] = await Promise.all([
+            api.listCompetitors(1, 5, null, null, query, false),
+            api.listParentSkusWithCompetitorStats(1, 5, query)
+        ]);
+
+        let html = '';
+
+        // Add SKU suggestions
+        const skus = skuResult.items || [];
+        if (skus.length > 0) {
+            html += '<div class="search-suggestion-header">Parent SKUs</div>';
+            for (const sku of skus) {
+                html += '<div class="search-suggestion" data-type="sku" data-id="' + sku.sku_id + '" data-label="' + escapeHtml(sku.sku_code) + '">' +
+                    '<div class="suggestion-primary">' + escapeHtml(sku.sku_code) + '</div>' +
+                    '<div class="suggestion-secondary">' + (sku.total_competitors || 0) + ' competitors</div>' +
+                '</div>';
+            }
+        }
+
+        // Add ASIN suggestions (competitors that match)
+        const competitors = competitorResult.items || [];
+        if (competitors.length > 0) {
+            html += '<div class="search-suggestion-header">ASINs</div>';
+            for (const comp of competitors) {
+                html += '<div class="search-suggestion" data-type="asin" data-asin="' + comp.asin + '" data-label="' + escapeHtml(comp.asin) + '">' +
+                    '<div class="suggestion-primary">' + escapeHtml(comp.asin) + '</div>' +
+                    '<div class="suggestion-secondary">' + escapeHtml(comp.sku_code || 'No SKU') + ' - amazon.' + comp.marketplace + '</div>' +
+                '</div>';
+            }
+        }
+
+        // Add "Search all" option
+        html += '<div class="search-suggestion search-all" data-type="search" data-query="' + escapeHtml(query) + '">' +
+            '<div class="suggestion-primary">Search all for "' + escapeHtml(query) + '"</div>' +
+        '</div>';
+
+        suggestions.innerHTML = html;
+        suggestions.classList.add('show');
+
+        // Add click handlers
+        suggestions.querySelectorAll('.search-suggestion').forEach(el => {
+            el.addEventListener('click', () => selectSuggestion(el));
+        });
+    } catch (error) {
+        console.error('Search error:', error);
+    }
+}
+
+function selectSuggestion(el) {
+    const type = el.dataset.type;
+    const input = document.getElementById('add-search-filter');
+    const suggestions = document.getElementById('search-suggestions');
+
+    suggestions.classList.remove('show');
+
+    if (type === 'sku') {
+        // Filter by SKU ID
+        currentAddSkuFilter = el.dataset.id;
+        currentSearchQuery = '';
+        input.value = el.dataset.label;
+    } else if (type === 'asin') {
+        // Search by specific ASIN
+        currentAddSkuFilter = '';
+        currentSearchQuery = el.dataset.asin;
+        input.value = el.dataset.label;
+    } else if (type === 'search') {
+        // Free text search
+        currentAddSkuFilter = '';
+        currentSearchQuery = el.dataset.query;
+        input.value = el.dataset.query;
+    }
+
+    unscheduledPage = 1;
+    loadUnscheduledCompetitors();
+}
+
+async function loadUnscheduledCompetitors() {
+    const tbody = document.getElementById('unscheduled-body');
+    tbody.innerHTML = '<tr><td colspan="6" class="loading"><div class="spinner"></div> Loading...</td></tr>';
+
+    try {
+        // Get competitors without schedule
+        const skuId = currentAddSkuFilter ? parseInt(currentAddSkuFilter) : null;
+        const search = currentSearchQuery || null;
+        const result = await api.listCompetitors(unscheduledPage, pageSize, skuId, null, search, true);
+
+        // Filter to only show unscheduled (no schedule or schedule = 'none')
+        const unscheduled = (result.items || []).filter(c => !c.schedule || c.schedule === 'none');
+
+        renderUnscheduledCompetitors(unscheduled);
+        renderPagination('unscheduled', result.total || 0, result.page || 1, result.per_page || pageSize);
+    } catch (error) {
+        console.error('Failed to load unscheduled competitors:', error);
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">Failed to load data</td></tr>';
+    }
+}
+
+function renderUnscheduledCompetitors(competitors) {
+    const tbody = document.getElementById('unscheduled-body');
+
+    if (!competitors || competitors.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No unscheduled competitors found</td></tr>';
+        return;
+    }
+
+    let html = '';
+    for (const comp of competitors) {
+        const data = comp.data || {};
+        html += '<tr>' +
+            '<td>' +
+                '<input type="checkbox" class="unscheduled-checkbox" data-competitor-id="' + comp.id + '" onchange="updateAddSelectedCount()">' +
+            '</td>' +
+            '<td>' +
+                '<a href="competitor-detail.html?id=' + comp.id + '" class="text-link font-medium">' +
+                    escapeHtml(comp.asin) +
+                '</a>' +
+            '</td>' +
+            '<td class="text-truncate" style="max-width: 200px;" title="' + escapeHtml(data.title || '') + '">' +
+                escapeHtml(data.title || '-') +
+            '</td>' +
+            '<td>' + escapeHtml(comp.sku_code || '-') + '</td>' +
+            '<td>amazon.' + comp.marketplace + '</td>' +
+            '<td>' + formatDateTime(data.scraped_at) + '</td>' +
+        '</tr>';
+    }
+    tbody.innerHTML = html;
+    // Reset select-all checkbox
+    document.getElementById('select-all-unscheduled').checked = false;
+    updateAddSelectedCount();
+}
+
+function toggleSelectAllUnscheduled(checkbox) {
+    document.querySelectorAll('.unscheduled-checkbox').forEach(cb => {
+        cb.checked = checkbox.checked;
+    });
+    updateAddSelectedCount();
+}
+
+function updateAddSelectedCount() {
+    const checkboxes = document.querySelectorAll('.unscheduled-checkbox:checked');
+    const count = checkboxes.length;
+    document.getElementById('add-selected-count').textContent = count;
+    document.getElementById('apply-schedule-btn').disabled = count === 0;
+}
+
+async function applyScheduleToSelected() {
+    const checkboxes = document.querySelectorAll('.unscheduled-checkbox:checked');
+    const ids = Array.from(checkboxes).map(cb => parseInt(cb.dataset.competitorId));
+
+    if (ids.length === 0) {
+        alert('Please select at least one competitor');
+        return;
+    }
+
+    const schedule = document.getElementById('add-schedule-select').value;
+
+    try {
+        // Update each selected competitor
+        for (const id of ids) {
+            await api.updateCompetitorSchedule(id, { schedule: schedule });
+        }
+        alert('Added ' + ids.length + ' competitor(s) to ' + formatSchedule(schedule) + ' schedule');
+        loadUnscheduledCompetitors();
+        loadScheduledCompetitors();  // Auto-refresh scheduled tab
+        loadStats();
+    } catch (error) {
+        console.error('Failed to apply schedule:', error);
+        alert('Failed to apply schedule: ' + error.message);
+    }
+}
+
+function goToUnscheduledPage(page) {
+    unscheduledPage = page;
+    loadUnscheduledCompetitors();
 }
 
 function escapeHtml(text) {
