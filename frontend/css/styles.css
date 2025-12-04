@@ -742,6 +742,21 @@ input[type="range"]::-webkit-slider-thumb:hover {
     background: var(--bg-secondary);
 }
 
+/* Sortable table headers */
+.table th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+.table th.sortable:hover {
+    background: var(--bg-primary);
+}
+
+.table th.sortable .sort-icon {
+    font-size: 0.75rem;
+    color: var(--primary-500);
+}
+
 .table-link {
     color: var(--primary-500);
     font-weight: 500;

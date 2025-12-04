@@ -183,6 +183,8 @@ class ChannelSkuService:
         sku_code: Optional[str] = None,
         min_rating: Optional[float] = None,
         max_rating: Optional[float] = None,
+        sort_by: Optional[str] = None,
+        sort_order: Optional[str] = "asc",
     ) -> Tuple[List[ChannelSku], int]:
         """
         List Channel SKUs with pagination and filters.
@@ -196,6 +198,8 @@ class ChannelSkuService:
             sku_code: Filter by parent SKU code (e.g., "HA-WF2-FLT")
             min_rating: Minimum rating filter
             max_rating: Maximum rating filter
+            sort_by: Field to sort by (channel_sku_code, latest_rating, latest_review_count, last_scraped_at)
+            sort_order: Sort order (asc or desc)
 
         Returns:
             Tuple of (items list, total count)
@@ -228,7 +232,17 @@ class ChannelSkuService:
         if max_rating is not None:
             query = query.filter(ChannelSku.latest_rating <= max_rating)
 
-        query = query.order_by(ChannelSku.channel_sku_code)
+        # Apply sorting
+        valid_sort_fields = ["channel_sku_code", "latest_rating", "latest_review_count", "last_scraped_at"]
+        if sort_by and sort_by in valid_sort_fields:
+            column = getattr(ChannelSku, sort_by)
+            if sort_order == "desc":
+                query = query.order_by(column.desc())
+            else:
+                query = query.order_by(column.asc())
+        else:
+            query = query.order_by(ChannelSku.channel_sku_code)
+
         total = query.count()
         items = query.offset(offset).limit(limit).all()
 

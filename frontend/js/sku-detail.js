@@ -11,6 +11,10 @@ let currentPage = 1;
 const pageSize = 20;
 let totalPages = 1;
 let skuCode = null;
+let skuId = null;
+let totalChannelSkus = 0;
+let sortBy = null;
+let sortOrder = 'asc';
 
 // DOM Elements
 const channelSkusBody = document.getElementById('channel-skus-body');
@@ -62,8 +66,30 @@ async function init() {
         searchInput.value = '';
         marketplaceFilter.value = '';
         ratingFilter.value = '';
+        sortBy = null;
+        sortOrder = 'asc';
         currentPage = 1;
+        updateSortIcons();
         loadChannelSkus();
+    });
+
+    // Export button
+    document.getElementById('export-btn').addEventListener('click', () => {
+        let url = api.exportChannelSkusCsv() + '?sku_code=' + encodeURIComponent(skuCode);
+        const marketplace = marketplaceFilter.value;
+        if (marketplace) url += '&marketplace=' + marketplace;
+        window.location.href = url;
+    });
+
+    // Delete SKU button
+    document.getElementById('delete-sku-btn').addEventListener('click', deleteParentSku);
+
+    // Sortable headers
+    document.querySelectorAll('th.sortable').forEach(th => {
+        th.addEventListener('click', () => {
+            const field = th.dataset.sort;
+            handleSort(field);
+        });
     });
 }
 
@@ -76,11 +102,17 @@ async function loadChannelSkus() {
     const minRating = ratingFilter.value ? parseFloat(ratingFilter.value) : null;
 
     try {
-        const result = await api.listChannelSkus(currentPage, pageSize, search, marketplace, skuCode, minRating, null);
+        const result = await api.listChannelSkus(currentPage, pageSize, search, marketplace, skuCode, minRating, null, sortBy, sortOrder);
         renderChannelSkus(result.items || []);
         totalPages = result.total_pages || 1;
+        totalChannelSkus = result.total || 0;
         renderPagination();
         updateStats(result.items || [], result.total || 0);
+
+        // Capture skuId from first item if available
+        if (result.items && result.items.length > 0 && result.items[0].sku_id) {
+            skuId = result.items[0].sku_id;
+        }
     } catch (error) {
         channelSkusBody.innerHTML = '<tr><td colspan="8" class="empty-state">Failed to load Channel SKUs: ' + escapeHtml(error.message) + '</td></tr>';
     }
@@ -143,6 +175,9 @@ function renderChannelSkus(channelSkus) {
                 '<div class="flex gap-1">' +
                     '<button class="btn btn-secondary btn-sm" onclick="viewHistory(' + item.id + ')" title="View History">' +
                         '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>' +
+                    '</button>' +
+                    '<button class="btn btn-danger btn-sm" onclick="deleteChannelSku(' + item.id + ', \'' + escapeHtml(item.channel_sku_code).replace(/'/g, "\\'") + '\')" title="Delete">' +
+                        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>' +
                     '</button>' +
                 '</div>' +
             '</td>' +
@@ -326,6 +361,79 @@ function debounce(func, wait) {
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
     };
+}
+
+/**
+ * Handle column sorting
+ */
+function handleSort(field) {
+    if (sortBy === field) {
+        sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+        sortBy = field;
+        sortOrder = 'asc';
+    }
+    currentPage = 1;
+    updateSortIcons();
+    loadChannelSkus();
+}
+
+/**
+ * Update sort icons in table headers
+ */
+function updateSortIcons() {
+    document.querySelectorAll('th.sortable .sort-icon').forEach(icon => {
+        icon.textContent = '';
+    });
+
+    if (sortBy) {
+        const activeHeader = document.querySelector('th.sortable[data-sort="' + sortBy + '"] .sort-icon');
+        if (activeHeader) {
+            activeHeader.textContent = sortOrder === 'asc' ? ' \u25B2' : ' \u25BC';
+        }
+    }
+}
+
+/**
+ * Delete a Channel SKU
+ */
+async function deleteChannelSku(id, code) {
+    if (!confirm('Delete Channel SKU "' + code + '"?\n\nThis action cannot be undone.')) {
+        return;
+    }
+
+    try {
+        await api.deleteChannelSku(id);
+        showAlert('Channel SKU "' + code + '" deleted successfully', 'success');
+        loadChannelSkus();
+    } catch (error) {
+        showAlert('Failed to delete: ' + error.message, 'error');
+    }
+}
+
+/**
+ * Delete the parent SKU and all its Channel SKUs
+ */
+async function deleteParentSku() {
+    if (!skuId) {
+        showAlert('Cannot delete: SKU ID not found', 'error');
+        return;
+    }
+
+    const message = 'DELETE parent SKU "' + skuCode + '" and ALL ' + totalChannelSkus + ' Channel SKUs?\n\nThis action CANNOT be undone!';
+    if (!confirm(message)) {
+        return;
+    }
+
+    try {
+        await api.deleteSku(skuId);
+        showAlert('Parent SKU "' + skuCode + '" deleted successfully', 'success');
+        setTimeout(() => {
+            window.location.href = 'skus-list.html';
+        }, 1000);
+    } catch (error) {
+        showAlert('Failed to delete: ' + error.message, 'error');
+    }
 }
 
 // Initialize when DOM is ready

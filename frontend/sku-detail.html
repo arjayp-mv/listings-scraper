@@ -33,13 +33,22 @@
                         </h1>
                         <p class="page-subtitle">Channel SKUs for this parent SKU</p>
                     </div>
-                    <a href="skus-list.html" class="btn btn-secondary">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="19" y1="12" x2="5" y2="12"></line>
-                            <polyline points="12 19 5 12 12 5"></polyline>
-                        </svg>
-                        Back to SKUs
-                    </a>
+                    <div class="flex gap-2">
+                        <button type="button" class="btn btn-danger" id="delete-sku-btn" title="Delete Parent SKU">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polyline points="3 6 5 6 21 6"></polyline>
+                                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            </svg>
+                            Delete SKU
+                        </button>
+                        <a href="skus-list.html" class="btn btn-secondary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="19" y1="12" x2="5" y2="12"></line>
+                                <polyline points="12 19 5 12 12 5"></polyline>
+                            </svg>
+                            Back to SKUs
+                        </a>
+                    </div>
                 </div>
             </div>
 
@@ -97,6 +106,14 @@
                             </select>
                         </div>
                         <button type="button" class="btn btn-secondary" id="clear-filters-btn">Clear</button>
+                        <button type="button" class="btn btn-primary" id="export-btn">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="7 10 12 15 17 10"></polyline>
+                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                            </svg>
+                            Export CSV
+                        </button>
                     </div>
                 </div>
             </div>
@@ -107,13 +124,13 @@
                     <table class="table" id="channel-skus-table">
                         <thead>
                             <tr>
-                                <th>Channel SKU</th>
+                                <th class="sortable" data-sort="channel_sku_code">Channel SKU <span class="sort-icon"></span></th>
                                 <th>ASIN</th>
                                 <th>Product Title</th>
                                 <th>Marketplace</th>
-                                <th>Rating</th>
-                                <th>Reviews</th>
-                                <th>Last Scanned</th>
+                                <th class="sortable" data-sort="latest_rating">Rating <span class="sort-icon"></span></th>
+                                <th class="sortable" data-sort="latest_review_count">Reviews <span class="sort-icon"></span></th>
+                                <th class="sortable" data-sort="last_scraped_at">Last Scanned <span class="sort-icon"></span></th>
                                 <th>Actions</th>
                             </tr>
                         </thead>

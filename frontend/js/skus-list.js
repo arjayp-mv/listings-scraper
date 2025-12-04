@@ -98,10 +98,14 @@ function renderSkus(skus) {
             '<td>' + totalReviews + '</td>' +
             '<td>' + lastScraped + '</td>' +
             '<td>' +
-                '<button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); viewSkuDetail(\'' + escapeHtml(sku.sku_code) + '\')" title="View Channel SKUs">' +
-                    '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>' +
-                    ' View' +
-                '</button>' +
+                '<div class="flex gap-1">' +
+                    '<button class="btn btn-primary btn-sm" onclick="event.stopPropagation(); viewSkuDetail(\'' + escapeHtml(sku.sku_code) + '\')" title="View Channel SKUs">' +
+                        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>' +
+                    '</button>' +
+                    '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation(); deleteSku(' + sku.id + ', \'' + escapeHtml(sku.sku_code).replace(/'/g, "\\'") + '\', ' + (sku.channel_sku_count || 0) + ')" title="Delete SKU">' +
+                        '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>' +
+                    '</button>' +
+                '</div>' +
             '</td>' +
         '</tr>';
     }
@@ -137,6 +141,27 @@ function renderStars(rating) {
  */
 function viewSkuDetail(skuCode) {
     window.location.href = 'sku-detail.html?sku=' + encodeURIComponent(skuCode);
+}
+
+/**
+ * Delete a parent SKU and all its Channel SKUs
+ */
+async function deleteSku(id, skuCode, channelSkuCount) {
+    const message = 'DELETE parent SKU "' + skuCode + '"' +
+        (channelSkuCount > 0 ? ' and ALL ' + channelSkuCount + ' Channel SKUs' : '') +
+        '?\n\nThis action CANNOT be undone!';
+
+    if (!confirm(message)) {
+        return;
+    }
+
+    try {
+        await api.deleteSku(id);
+        showAlert('Parent SKU "' + skuCode + '" deleted successfully', 'success');
+        loadSkus(); // Refresh the list
+    } catch (error) {
+        showAlert('Failed to delete: ' + error.message, 'error');
+    }
 }
 
 /**

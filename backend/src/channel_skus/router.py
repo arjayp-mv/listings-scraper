@@ -46,6 +46,8 @@ async def list_channel_skus(
     sku_code: Optional[str] = Query(None, description="Filter by parent SKU code"),
     min_rating: Optional[float] = Query(None, ge=0, le=5),
     max_rating: Optional[float] = Query(None, ge=0, le=5),
+    sort_by: Optional[str] = Query(None, description="Sort by field: channel_sku_code, latest_rating, latest_review_count, last_scraped_at"),
+    sort_order: Optional[str] = Query("asc", description="Sort order: asc or desc"),
     pagination: PaginationParams = Depends(get_pagination_params),
     db: Session = Depends(get_db),
 ):
@@ -54,6 +56,7 @@ async def list_channel_skus(
 
     Supports searching by code, ASIN, or title, and filtering by
     marketplace, parent SKU (ID or code), and rating range.
+    Supports sorting by channel_sku_code, latest_rating, latest_review_count, or last_scraped_at.
     """
     service = ChannelSkuService(db)
     items, total = service.list_all(
@@ -65,6 +68,8 @@ async def list_channel_skus(
         sku_code=sku_code,
         min_rating=min_rating,
         max_rating=max_rating,
+        sort_by=sort_by,
+        sort_order=sort_order,
     )
 
     # Transform to response with SKU code
@@ -109,11 +114,12 @@ async def search_channel_skus(
 @router.get("/export/csv")
 async def export_channel_skus_csv(
     marketplace: Optional[str] = Query(None),
+    sku_code: Optional[str] = Query(None, description="Filter by parent SKU code"),
     db: Session = Depends(get_db),
 ):
-    """Export all Channel SKUs as CSV."""
+    """Export Channel SKUs as CSV, optionally filtered by SKU code."""
     service = ChannelSkuService(db)
-    items, _ = service.list_all(offset=0, limit=10000, marketplace=marketplace)
+    items, _ = service.list_all(offset=0, limit=10000, marketplace=marketplace, sku_code=sku_code)
 
     # Create CSV in memory
     output = io.StringIO()

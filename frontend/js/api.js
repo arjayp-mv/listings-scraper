@@ -184,13 +184,15 @@ const api = {
     getExcelExportUrl: (jobId) => API_BASE + '/jobs/' + jobId + '/reviews/export/excel',
 
     // ===== Channel SKUs =====
-    listChannelSkus: (page = 1, pageSize = 20, search = null, marketplace = null, skuCode = null, minRating = null, maxRating = null) => {
+    listChannelSkus: (page = 1, pageSize = 20, search = null, marketplace = null, skuCode = null, minRating = null, maxRating = null, sortBy = null, sortOrder = null) => {
         let url = '/channel-skus?page=' + page + '&page_size=' + pageSize;
         if (search) url += '&search=' + encodeURIComponent(search);
         if (marketplace) url += '&marketplace=' + marketplace;
         if (skuCode) url += '&sku_code=' + encodeURIComponent(skuCode);
         if (minRating !== null) url += '&min_rating=' + minRating;
         if (maxRating !== null) url += '&max_rating=' + maxRating;
+        if (sortBy) url += '&sort_by=' + sortBy;
+        if (sortOrder) url += '&sort_order=' + sortOrder;
         return fetchAPI(url);
     },
 

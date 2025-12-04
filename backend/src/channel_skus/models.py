@@ -44,7 +44,7 @@ class ChannelSku(Base):
     __tablename__ = "channel_sku"
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
-    sku_id = Column(BigInteger, ForeignKey("sku.id", ondelete="SET NULL"), nullable=True)
+    sku_id = Column(BigInteger, ForeignKey("sku.id", ondelete="CASCADE"), nullable=True)
     channel_sku_code = Column(String(100), nullable=False)
     marketplace = Column(String(10), nullable=False, default="com")
     current_asin = Column(String(15), nullable=False)
