@@ -518,6 +518,55 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// ===== Helper Functions for Comparison Views =====
+
+/**
+ * Extract brand from data, falling back to product_details array if needed
+ */
+function getBrand(data) {
+    // First try direct brand field
+    if (data?.brand) {
+        return data.brand;
+    }
+    // Fallback: extract from product_details array
+    if (data?.product_details && Array.isArray(data.product_details)) {
+        const brandDetail = data.product_details.find(d =>
+            d.name && d.name.toLowerCase() === 'brand'
+        );
+        if (brandDetail && brandDetail.value) {
+            // Remove leading "?" character if present (data artifact)
+            return brandDetail.value.replace(/^\?/, '').trim();
+        }
+    }
+    return null;
+}
+
+/**
+ * Parse sales string to numeric value for sorting
+ * Examples: "2K+ bought in past month" -> 2000, "50+ bought" -> 50
+ */
+function parseSalesValue(salesStr) {
+    if (!salesStr) return 0;
+    const match = salesStr.match(/^(\d+(?:\.\d+)?)(K?)\+?/i);
+    if (!match) return 0;
+    let value = parseFloat(match[1]);
+    if (match[2] && match[2].toUpperCase() === 'K') {
+        value *= 1000;
+    }
+    return value;
+}
+
+/**
+ * Sort competitors by sales volume (highest first by default)
+ */
+function sortCompetitorsBySales(competitors, descending = true) {
+    return [...competitors].sort((a, b) => {
+        const salesA = parseSalesValue(a.data?.past_sales);
+        const salesB = parseSalesValue(b.data?.past_sales);
+        return descending ? salesB - salesA : salesA - salesB;
+    });
+}
+
 // =============================================================================
 // Comparison View (Competitors as Columns)
 // =============================================================================
@@ -530,13 +579,16 @@ function renderComparisonView(competitors) {
         return;
     }
 
+    // Sort by sales (highest first)
+    const sorted = sortCompetitorsBySales(competitors, true);
+
     // Metrics to display as rows (based on PRD section 4.8)
     const metrics = [
         { key: 'image', label: 'Image', render: (c) => {
             const imgUrl = c.data?.main_image_url || '';
             return imgUrl ? '<img src="' + imgUrl + '" class="comparison-thumb" onclick="openLightbox(\'' + imgUrl + '\')" alt="Product">' : '-';
         }},
-        { key: 'brand', label: 'Brand', render: (c) => escapeHtml(c.data?.brand || '-') },
+        { key: 'brand', label: 'Brand', render: (c) => escapeHtml(getBrand(c.data) || '-') },
         { key: 'asin', label: 'ASIN', render: (c) => '<a href="https://amazon.' + c.marketplace + '/dp/' + c.asin + '" target="_blank" class="comparison-asin-link">' + c.asin + '</a>' },
         { key: 'title', label: 'Title', render: (c) => '<div class="comparison-title">' + escapeHtml(c.data?.title || '-') + '</div>' },
         { key: 'pack_size', label: 'Pack Size', render: (c) => c.pack_size || 1 },
@@ -555,9 +607,9 @@ function renderComparisonView(competitors) {
 
     let html = '<table class="comparison-table">';
 
-    // Header row with competitor ASINs
+    // Header row with competitor ASINs (sorted by sales)
     html += '<thead><tr><th class="metric-label-col">Metric</th>';
-    for (const comp of competitors) {
+    for (const comp of sorted) {
         html += '<th class="competitor-col">' + comp.asin + '</th>';
     }
     html += '</tr></thead><tbody>';
@@ -565,7 +617,7 @@ function renderComparisonView(competitors) {
     // Data rows
     for (const metric of metrics) {
         html += '<tr><td class="metric-label">' + metric.label + '</td>';
-        for (const comp of competitors) {
+        for (const comp of sorted) {
             html += '<td class="metric-value">' + metric.render(comp) + '</td>';
         }
         html += '</tr>';
@@ -587,12 +639,15 @@ function renderImagesView(competitors) {
         return;
     }
 
+    // Sort by sales (highest first)
+    const sorted = sortCompetitorsBySales(competitors, true);
+
     let html = '';
 
-    for (const comp of competitors) {
+    for (const comp of sorted) {
         const data = comp.data || {};
         const mainImage = data.main_image_url || '';
-        const images = data.image_urls || [];
+        const images = data.images || []; // Fixed: was data.image_urls
 
         // Combine main image with other images (deduplicated)
         let allImages = [];
@@ -638,9 +693,12 @@ function renderContentView(competitors) {
         return;
     }
 
+    // Sort by sales (highest first)
+    const sorted = sortCompetitorsBySales(competitors, true);
+
     let html = '';
 
-    for (const comp of competitors) {
+    for (const comp of sorted) {
         const data = comp.data || {};
         const features = data.features || [];
         const mainImage = data.main_image_url || '';
@@ -675,8 +733,8 @@ function renderContentView(competitors) {
                 '<h4>Description</h4>' +
                 '<div class="content-description">';
 
-        if (data.description) {
-            html += escapeHtml(data.description);
+        if (data.product_description) {
+            html += escapeHtml(data.product_description);
         } else {
             html += '<span class="empty">No description available</span>';
         }
