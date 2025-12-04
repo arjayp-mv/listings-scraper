@@ -28,7 +28,7 @@ class ProductScanJobCreate(BaseModel):
     """Schema for creating a product scan job."""
     job_name: str = Field(..., min_length=1, max_length=255)
     marketplace: str = Field(default="com", max_length=10)
-    listings: List[ProductScanListingInput] = Field(..., min_length=1, max_length=500)
+    listings: List[ProductScanListingInput] = Field(..., min_length=1, max_length=2000)
 
 
 class RetryFailedRequest(BaseModel):

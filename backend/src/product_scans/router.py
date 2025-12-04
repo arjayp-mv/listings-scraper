@@ -176,11 +176,16 @@ async def get_product_scan_job(
     if not job:
         raise HTTPException(status_code=404, detail="Job not found")
 
+    # For running jobs, get real-time progress from item statuses
+    if job.status == JobStatus.RUNNING:
+        completed, failed = service.get_real_time_progress(job.id)
+    else:
+        completed = job.completed_listings
+        failed = job.failed_listings
+
     progress = 0.0
     if job.total_listings > 0:
-        progress = (
-            (job.completed_listings + job.failed_listings) / job.total_listings
-        ) * 100
+        progress = ((completed + failed) / job.total_listings) * 100
 
     return ProductScanJobDetailResponse(
         id=job.id,
@@ -188,8 +193,8 @@ async def get_product_scan_job(
         status=job.status,
         marketplace=job.marketplace,
         total_listings=job.total_listings,
-        completed_listings=job.completed_listings,
-        failed_listings=job.failed_listings,
+        completed_listings=completed,
+        failed_listings=failed,
         error_message=job.error_message,
         created_at=job.created_at,
         started_at=job.started_at,

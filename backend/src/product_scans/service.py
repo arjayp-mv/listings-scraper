@@ -369,6 +369,26 @@ class ProductScanService:
         self.db.commit()
         return result
 
+    def get_real_time_progress(self, job_id: int) -> tuple[int, int]:
+        """Get real-time completed/failed counts from item statuses."""
+        completed = (
+            self.db.query(func.count(ProductScanItem.id))
+            .filter(
+                ProductScanItem.job_id == job_id,
+                ProductScanItem.status == ItemStatus.COMPLETED,
+            )
+            .scalar() or 0
+        )
+        failed = (
+            self.db.query(func.count(ProductScanItem.id))
+            .filter(
+                ProductScanItem.job_id == job_id,
+                ProductScanItem.status == ItemStatus.FAILED,
+            )
+            .scalar() or 0
+        )
+        return completed, failed
+
     # ===== Delete Operations =====
 
     def delete_job(self, job: ProductScanJob) -> None:

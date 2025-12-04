@@ -41,7 +41,22 @@ async function fetchAPI(endpoint, options = {}) {
         const data = await response.json();
 
         if (!response.ok) {
-            throw new Error(data.detail || 'API request failed');
+            // Handle Pydantic validation errors (422)
+            let errorMessage = 'API request failed';
+            if (data.detail) {
+                if (typeof data.detail === 'string') {
+                    errorMessage = data.detail;
+                } else if (Array.isArray(data.detail)) {
+                    // Pydantic validation errors are arrays
+                    errorMessage = data.detail.map(err => {
+                        const loc = err.loc ? err.loc.join('.') : '';
+                        return loc ? `${loc}: ${err.msg}` : err.msg;
+                    }).join('; ');
+                } else {
+                    errorMessage = JSON.stringify(data.detail);
+                }
+            }
+            throw new Error(errorMessage);
         }
 
         return data;
