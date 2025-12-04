@@ -37,6 +37,17 @@
                     { text: 'All Listings', href: 'listings.html' },
                     { text: 'Parent SKUs', href: 'skus-list.html' }
                 ]
+            },
+            {
+                type: 'dropdown',
+                text: 'Competitor Research',
+                pages: ['competitor-dashboard.html', 'competitor-parent-skus.html', 'competitor-parent-sku-detail.html', 'competitor-detail.html', 'competitor-keywords.html', 'competitor-monitoring.html'],
+                items: [
+                    { text: 'Dashboard', href: 'competitor-dashboard.html' },
+                    { text: 'Parent SKUs', href: 'competitor-parent-skus.html' },
+                    { text: 'Keywords', href: 'competitor-keywords.html' },
+                    { text: 'Monitoring', href: 'competitor-monitoring.html' }
+                ]
             }
         ]
     };

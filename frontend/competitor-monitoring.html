@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitoring - Competitor Research</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="header"></header>
+
+    <main class="main">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Monitoring</h1>
+                    <p class="page-subtitle">View scheduled scrapes and manage competitor monitoring</p>
+                </div>
+                <button class="btn btn-primary" id="scrape-all-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
+                    Scrape All Scheduled
+                </button>
+            </div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-scheduled">-</div>
+                    <div class="stat-label">Scheduled Competitors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-due">-</div>
+                    <div class="stat-label">Due for Scrape</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-jobs-running">-</div>
+                    <div class="stat-label">Jobs Running</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-jobs-queued">-</div>
+                    <div class="stat-label">Jobs Queued</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="scheduled">Scheduled Competitors</button>
+                <button class="tab-btn" data-tab="jobs">Recent Jobs</button>
+            </div>
+
+            <!-- Scheduled Competitors Tab -->
+            <div class="tab-content active" id="tab-scheduled">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Scheduled Competitors</h2>
+                        <select id="schedule-filter" class="form-control" style="width: auto;">
+                            <option value="">All Schedules</option>
+                            <option value="daily">Daily</option>
+                            <option value="every_2_days">Every 2 Days</option>
+                            <option value="every_3_days">Every 3 Days</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+                    <div class="card-body" style="padding: 0;">
+                        <table class="table" id="scheduled-table">
+                            <thead>
+                                <tr>
+                                    <th>ASIN</th>
+                                    <th>Parent SKU</th>
+                                    <th>Marketplace</th>
+                                    <th>Schedule</th>
+                                    <th>Last Scraped</th>
+                                    <th>Next Scrape</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="scheduled-body">
+                                <tr>
+                                    <td colspan="8" class="loading">
+                                        <div class="spinner"></div> Loading...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer">
+                        <div class="pagination" id="scheduled-pagination"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Jobs Tab -->
+            <div class="tab-content" id="tab-jobs">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Recent Scrape Jobs</h2>
+                        <select id="job-status-filter" class="form-control" style="width: auto;">
+                            <option value="">All Status</option>
+                            <option value="queued">Queued</option>
+                            <option value="running">Running</option>
+                            <option value="completed">Completed</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
+                    <div class="card-body" style="padding: 0;">
+                        <table class="table" id="jobs-table">
+                            <thead>
+                                <tr>
+                                    <th>Job Name</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Progress</th>
+                                    <th>Created</th>
+                                    <th>Completed</th>
+                                </tr>
+                            </thead>
+                            <tbody id="jobs-body">
+                                <tr>
+                                    <td colspan="6" class="loading">
+                                        <div class="spinner"></div> Loading...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="card-footer">
+                        <div class="pagination" id="jobs-pagination"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/nav.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/competitor-monitoring.js"></script>
+</body>
+</html>

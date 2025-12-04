@@ -22,6 +22,7 @@ from .jobs.router import router as jobs_router
 from .reviews.router import router as reviews_router
 from .channel_skus.router import router as channel_skus_router
 from .product_scans.router import router as product_scans_router
+from .competitors.router import router as competitors_router
 from .jobs.models import ScrapeJob
 from .skus.models import Sku
 from .channel_skus.models import ChannelSku
@@ -84,6 +85,7 @@ app.include_router(jobs_router)
 app.include_router(reviews_router)
 app.include_router(channel_skus_router)
 app.include_router(product_scans_router)
+app.include_router(competitors_router)
 
 
 # ===== Dashboard Endpoint =====

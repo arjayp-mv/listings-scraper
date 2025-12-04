@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Competitor Detail - Competitor Research</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .competitor-header {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .competitor-image {
+            width: 200px;
+            height: 200px;
+            object-fit: contain;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            background: #fff;
+        }
+        .competitor-info {
+            flex: 1;
+        }
+        .competitor-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .competitor-meta {
+            color: var(--gray-600);
+            margin-bottom: 16px;
+        }
+        .competitor-meta span {
+            margin-right: 16px;
+        }
+        .price-display {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-600);
+        }
+        .price-unit {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+            margin-left: 8px;
+        }
+        .image-gallery {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .gallery-image {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            border: 1px solid var(--gray-200);
+            border-radius: 8px;
+            cursor: pointer;
+            background: #fff;
+        }
+        .gallery-image:hover {
+            border-color: var(--primary-500);
+        }
+        .bullet-list {
+            list-style: disc;
+            padding-left: 20px;
+        }
+        .bullet-list li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        .description-text {
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        .price-history-chart {
+            height: 300px;
+            background: var(--gray-50);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray-500);
+        }
+    </style>
+</head>
+<body>
+    <header class="header"></header>
+
+    <main class="main">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <nav class="breadcrumb">
+                        <a href="competitor-parent-skus.html">Parent SKUs</a>
+                        <span>/</span>
+                        <a href="#" id="breadcrumb-sku">Loading...</a>
+                        <span>/</span>
+                        <span id="breadcrumb-asin">Loading...</span>
+                    </nav>
+                    <h1 class="page-title" id="page-title">Loading...</h1>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="edit-btn">Edit</button>
+                    <button class="btn btn-primary" id="scrape-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                        Refresh Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Competitor Header -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="competitor-header">
+                        <img id="main-image" class="competitor-image" src="" alt="Product Image">
+                        <div class="competitor-info">
+                            <div class="competitor-title" id="product-title">Loading...</div>
+                            <div class="competitor-meta">
+                                <span id="product-brand"></span>
+                                <span id="product-marketplace"></span>
+                            </div>
+                            <div class="price-display">
+                                <span id="product-price">-</span>
+                                <span class="price-unit" id="product-unit-price"></span>
+                            </div>
+                            <div style="margin-top: 16px;">
+                                <span class="status-badge" id="product-rating">-</span>
+                                <span id="product-reviews" style="margin-left: 8px; color: var(--gray-600);"></span>
+                            </div>
+                            <div style="margin-top: 16px; color: var(--gray-600);">
+                                <div>Schedule: <span id="product-schedule">-</span></div>
+                                <div>Last Scraped: <span id="product-last-scraped">-</span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="images">Images</button>
+                <button class="tab-btn" data-tab="bullets">Bullet Points</button>
+                <button class="tab-btn" data-tab="description">Description</button>
+                <button class="tab-btn" data-tab="history">Price History</button>
+            </div>
+
+            <!-- Images Tab -->
+            <div class="tab-content active" id="tab-images">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Product Images</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="image-gallery" id="image-gallery">
+                            <p class="text-muted">Loading images...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bullets Tab -->
+            <div class="tab-content" id="tab-bullets">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Bullet Points / Features</h2>
+                        <button class="btn btn-secondary btn-sm" id="copy-bullets-btn">Copy</button>
+                    </div>
+                    <div class="card-body">
+                        <ul class="bullet-list" id="bullet-list">
+                            <li>Loading...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description Tab -->
+            <div class="tab-content" id="tab-description">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Product Description</h2>
+                        <button class="btn btn-secondary btn-sm" id="copy-desc-btn">Copy</button>
+                    </div>
+                    <div class="card-body">
+                        <div class="description-text" id="description-text">Loading...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Price History Tab -->
+            <div class="tab-content" id="tab-history">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Price History</h2>
+                        <select id="history-days" class="form-control" style="width: auto;">
+                            <option value="30">Last 30 Days</option>
+                            <option value="90">Last 90 Days</option>
+                            <option value="180">Last 6 Months</option>
+                            <option value="365" selected>Last Year</option>
+                        </select>
+                    </div>
+                    <div class="card-body" style="padding: 0;">
+                        <table class="table" id="history-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Price</th>
+                                    <th>Unit Price</th>
+                                    <th>Rating</th>
+                                    <th>Reviews</th>
+                                    <th>Change</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-body">
+                                <tr>
+                                    <td colspan="6" class="loading">
+                                        <div class="spinner"></div> Loading...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Edit Modal -->
+            <div class="modal" id="edit-modal" style="display: none;">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title">Edit Competitor</h3>
+                        <button class="modal-close" id="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="edit-form">
+                            <div class="form-group">
+                                <label for="edit-pack-size">Pack Size</label>
+                                <input type="number" id="edit-pack-size" class="form-control" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-schedule">Schedule</label>
+                                <select id="edit-schedule" class="form-control">
+                                    <option value="">None (Manual)</option>
+                                    <option value="daily">Daily</option>
+                                    <option value="every_2_days">Every 2 Days</option>
+                                    <option value="every_3_days">Every 3 Days</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="edit-notes">Notes</label>
+                                <textarea id="edit-notes" class="form-control" rows="3"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" id="cancel-edit">Cancel</button>
+                        <button class="btn btn-primary" id="save-edit">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/nav.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/competitor-detail.js"></script>
+</body>
+</html>

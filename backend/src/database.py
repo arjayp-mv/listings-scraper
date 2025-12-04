@@ -6,6 +6,8 @@
 # Dependencies: sqlalchemy, config
 # =============================================================================
 
+import json
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
@@ -18,6 +20,8 @@ engine = create_engine(
     pool_pre_ping=True,  # Verify connections before use
     pool_recycle=3600,   # Recycle connections after 1 hour
     echo=False,          # Set True for SQL debugging
+    json_serializer=lambda o: json.dumps(o, ensure_ascii=False, default=str),
+    json_deserializer=json.loads,
 )
 
 # ===== Session Factory =====

@@ -19,6 +19,7 @@ class Sku(Base):
     Attributes:
         id: Primary key
         sku_code: Unique identifier (e.g., "WF2", "WF3")
+        display_name: Human-readable name for display (e.g., "Whole Food 2-Pack")
         description: Optional description of the SKU
         created_at: Timestamp when SKU was created
         updated_at: Timestamp of last update
@@ -29,6 +30,7 @@ class Sku(Base):
 
     id = Column(BigInteger, primary_key=True, autoincrement=True)
     sku_code = Column(String(50), unique=True, nullable=False, index=True)
+    display_name = Column(String(255), nullable=True)
     description = Column(Text, nullable=True)
     created_at = Column(TIMESTAMP, server_default=func.current_timestamp())
     updated_at = Column(

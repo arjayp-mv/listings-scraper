@@ -104,6 +104,43 @@ def paginate_query(
     return items, total
 
 
+def paginate(query: SQLQuery, page: int = 1, per_page: int = 20) -> tuple[list, int]:
+    """
+    Apply pagination to SQLAlchemy query using simple page/per_page.
+
+    Args:
+        query: SQLAlchemy query to paginate
+        page: Page number (1-indexed)
+        per_page: Items per page
+
+    Returns:
+        Tuple of (items list, total count)
+
+    Example:
+        items, total = paginate(db.query(Model), page=1, per_page=20)
+    """
+    total = query.count()
+    offset = (page - 1) * per_page
+    items = query.offset(offset).limit(per_page).all()
+    return items, total
+
+
+def calculate_pages(total: int, per_page: int) -> int:
+    """
+    Calculate total number of pages.
+
+    Args:
+        total: Total count of items
+        per_page: Items per page
+
+    Returns:
+        Total number of pages (minimum 1)
+    """
+    if total <= 0 or per_page <= 0:
+        return 1
+    return (total + per_page - 1) // per_page
+
+
 def create_paginated_response(
     items: List[T],
     total: int,

@@ -20,6 +20,8 @@ from ..reviews.service import ReviewService
 from ..product_scans.models import ProductScanJob, ProductScanItem, JobStatus, ItemStatus
 from ..product_scans.service import ProductScanService
 from ..channel_skus.service import ChannelSkuService
+from ..competitors.models import CompetitorScrapeJob, CompetitorScrapeItem
+from ..competitors.service import CompetitorService
 from ..apify.client import get_apify_service, ApifyService
 from ..apify.exceptions import ApifyError
 
@@ -112,13 +114,23 @@ def _worker_tick() -> None:
             _process_job(db, review_job)
             return
 
-        # Process product scan jobs (new functionality)
+        # Process product scan jobs
         scan_service = ProductScanService(db)
         product_job = scan_service.get_next_queued_job()
         if product_job:
             logger.info(f"Processing product scan job {product_job.id}: {product_job.job_name}")
             _process_product_scan_job(db, product_job)
             return
+
+        # Process competitor scrape jobs
+        competitor_job = CompetitorService.get_next_queued_job(db)
+        if competitor_job:
+            logger.info(f"Processing competitor job {competitor_job.id}: {competitor_job.job_name}")
+            _process_competitor_scrape_job(db, competitor_job)
+            return
+
+        # Check for scheduled competitor scrapes
+        _check_scheduled_competitor_scrapes(db)
 
     except Exception as e:
         logger.error(f"Worker tick error: {e}", exc_info=True)
@@ -326,7 +338,23 @@ def _recover_stuck_jobs(db) -> None:
         job.error_message = "Job timed out (stuck for > 30 minutes)"
         job.completed_at = datetime.utcnow()
 
-    if stuck_jobs or stuck_scan_jobs:
+    # Recover stuck competitor scrape jobs
+    stuck_competitor_jobs = (
+        db.query(CompetitorScrapeJob)
+        .filter(
+            CompetitorScrapeJob.status == "running",
+            CompetitorScrapeJob.started_at < threshold,
+        )
+        .all()
+    )
+
+    for job in stuck_competitor_jobs:
+        logger.warning(f"Recovering stuck competitor job {job.id}")
+        job.status = "failed"
+        job.error_message = "Job timed out (stuck for > 30 minutes)"
+        job.completed_at = datetime.utcnow()
+
+    if stuck_jobs or stuck_scan_jobs or stuck_competitor_jobs:
         db.commit()
 
 
@@ -489,3 +517,231 @@ def _process_product_scan_batch(
         for item in items:
             if item.status == ItemStatus.RUNNING:
                 scan_service.fail_item(item, str(e))
+
+
+# ===== Competitor Scrape Job Processing =====
+
+COMPETITOR_BATCH_SIZE = 50  # ASINs per Apify call
+
+
+def _process_competitor_scrape_job(db, job: CompetitorScrapeJob) -> None:
+    """
+    Process a competitor scrape job.
+
+    Batches competitor ASINs together for efficient Apify calls.
+    """
+    apify_service = get_apify_service()
+
+    # Mark job as running
+    job.status = "running"
+    job.started_at = datetime.utcnow()
+    db.commit()
+
+    try:
+        # Process pending items in batches
+        while True:
+            pending_items = CompetitorService.get_pending_items_for_job(db, job.id)
+            if not pending_items:
+                break
+
+            # Take only batch size
+            batch = pending_items[:COMPETITOR_BATCH_SIZE]
+
+            _process_competitor_batch(
+                db=db,
+                job=job,
+                items=batch,
+                apify_service=apify_service,
+            )
+
+            # Delay between batches
+            if settings.apify_delay_seconds > 0:
+                import time
+                time.sleep(settings.apify_delay_seconds)
+
+        # Finalize job
+        db.refresh(job)
+        if job.failed_competitors > 0 and job.completed_competitors > 0:
+            job.status = "partial"
+        elif job.failed_competitors > 0 and job.completed_competitors == 0:
+            job.status = "failed"
+        else:
+            job.status = "completed"
+        job.completed_at = datetime.utcnow()
+        db.commit()
+
+        logger.info(
+            f"Competitor scrape job {job.id} completed: "
+            f"{job.completed_competitors} succeeded, {job.failed_competitors} failed"
+        )
+
+    except Exception as e:
+        logger.error(f"Competitor scrape job {job.id} failed: {e}", exc_info=True)
+        job.status = "failed"
+        job.error_message = str(e)
+        job.completed_at = datetime.utcnow()
+        db.commit()
+
+
+def _process_competitor_batch(
+    db,
+    job: CompetitorScrapeJob,
+    items: list,
+    apify_service: ApifyService,
+) -> None:
+    """
+    Process a batch of competitor scrape items.
+
+    Calls Apify once for all ASINs in the batch for efficiency.
+    """
+    # Build ASIN list and item map
+    asins = [item.input_asin for item in items]
+    item_map = {item.input_asin: item for item in items}
+
+    # Mark all items as running
+    for item in items:
+        item.status = "running"
+        item.started_at = datetime.utcnow()
+    db.commit()
+
+    logger.info(f"Processing competitor batch of {len(asins)} ASINs for job {job.id}")
+
+    try:
+        # Call Apify (synchronous version for worker thread)
+        results = apify_service.scrape_product_details_sync(
+            asins=asins,
+            marketplace=job.marketplace,
+        )
+
+        # Process results
+        results_map = {}
+        for result in results:
+            # Map result to ASIN
+            result_asin = result.get("asin")
+            result_url = result.get("url", "")
+
+            # Try to extract ASIN from URL if not in result
+            if not result_asin and result_url:
+                import re
+                match = re.search(r"/dp/([A-Z0-9]{10})", result_url)
+                if match:
+                    result_asin = match.group(1)
+
+            if result_asin:
+                results_map[result_asin] = result
+
+        # Update each item and save competitor data
+        for asin, item in item_map.items():
+            result = results_map.get(asin)
+            competitor = item.competitor
+
+            if result:
+                status_code = result.get("statusCode", 0)
+
+                if status_code == 200 or result.get("title"):
+                    # Parse and save competitor data
+                    pack_size = competitor.pack_size or 1 if competitor else 1
+                    parsed_data = ApifyService.parse_competitor_data(result, pack_size)
+
+                    # Save scraped data
+                    CompetitorService.save_scraped_data(db, item.competitor_id, parsed_data)
+
+                    # Record price history
+                    CompetitorService.record_price_history(db, item.competitor_id)
+
+                    # Update next scrape time if scheduled
+                    if competitor and competitor.schedule != "none":
+                        CompetitorService.update_next_scrape(db, competitor)
+
+                    # Mark item as completed
+                    item.status = "completed"
+                    item.completed_at = datetime.utcnow()
+                    job.completed_competitors += 1
+
+                    logger.debug(
+                        f"Competitor {asin}: price={parsed_data.get('price')}, "
+                        f"rating={parsed_data.get('rating')}"
+                    )
+
+                else:
+                    # Non-200 status
+                    error_msg = result.get("statusMessage", f"Status code: {status_code}")
+                    item.status = "failed"
+                    item.error_message = error_msg
+                    item.completed_at = datetime.utcnow()
+                    job.failed_competitors += 1
+                    logger.warning(f"Competitor {asin} failed: {error_msg}")
+
+            else:
+                # No result found for this ASIN
+                item.status = "failed"
+                item.error_message = "No result returned from Apify"
+                item.completed_at = datetime.utcnow()
+                job.failed_competitors += 1
+                logger.warning(f"Competitor {asin}: No result in Apify response")
+
+        db.commit()
+
+    except ApifyError as e:
+        # Apify call failed - mark all items as failed
+        logger.error(f"Apify competitor batch call failed: {e}")
+        for item in items:
+            if item.status == "running":
+                item.status = "failed"
+                item.error_message = str(e)
+                item.completed_at = datetime.utcnow()
+                job.failed_competitors += 1
+        db.commit()
+
+    except Exception as e:
+        logger.error(f"Competitor batch processing error: {e}", exc_info=True)
+        for item in items:
+            if item.status == "running":
+                item.status = "failed"
+                item.error_message = str(e)
+                item.completed_at = datetime.utcnow()
+                job.failed_competitors += 1
+        db.commit()
+
+
+def _check_scheduled_competitor_scrapes(db) -> None:
+    """
+    Check for competitors due for scheduled scraping.
+
+    Creates a scheduled scrape job for due competitors.
+    """
+    due_competitors = CompetitorService.get_due_scheduled_competitors(db)
+
+    if not due_competitors:
+        return
+
+    logger.info(f"Found {len(due_competitors)} competitors due for scheduled scrape")
+
+    # Group by marketplace
+    by_marketplace = {}
+    for comp in due_competitors:
+        mp = comp.marketplace
+        if mp not in by_marketplace:
+            by_marketplace[mp] = []
+        by_marketplace[mp].append(comp)
+
+    # Create a job for each marketplace
+    from .schemas import ScrapeJobCreate
+
+    for marketplace, competitors in by_marketplace.items():
+        from ..competitors.schemas import ScrapeJobCreate as CompScrapeJobCreate
+
+        job_data = CompScrapeJobCreate(
+            job_name=f"Scheduled scan - {marketplace} - {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}",
+            marketplace=marketplace,
+            competitor_ids=[c.id for c in competitors],
+        )
+
+        job = CompetitorService.create_scrape_job(db, job_data)
+        job.job_type = "scheduled"
+        db.commit()
+
+        logger.info(
+            f"Created scheduled competitor job {job.id} for {len(competitors)} "
+            f"competitors in {marketplace}"
+        )

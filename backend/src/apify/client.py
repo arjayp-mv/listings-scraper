@@ -303,6 +303,132 @@ class ApifyService:
         except Exception:
             return False
 
+    @staticmethod
+    def parse_competitor_data(raw_data: dict, pack_size: int = 1) -> dict:
+        """
+        Parse Apify product details response into competitor_data fields.
+
+        Maps the axesso_data~amazon-product-details-scraper output to our
+        CompetitorData model fields.
+
+        Args:
+            raw_data: Raw response from Apify product details scraper
+            pack_size: Pack size for unit price calculation
+
+        Returns:
+            Dictionary with parsed competitor data fields
+        """
+        import re
+        from decimal import Decimal, InvalidOperation
+
+        def parse_price(price_val) -> Optional[Decimal]:
+            """Extract numeric price from various formats."""
+            if price_val is None:
+                return None
+            if isinstance(price_val, (int, float)):
+                return Decimal(str(price_val))
+            if isinstance(price_val, str):
+                # Remove currency symbols and extract number
+                match = re.search(r"[\d,]+\.?\d*", price_val.replace(",", ""))
+                if match:
+                    try:
+                        return Decimal(match.group())
+                    except InvalidOperation:
+                        return None
+            return None
+
+        def parse_rating_value(rating_val) -> Optional[float]:
+            """Extract rating from various formats."""
+            if rating_val is None:
+                return None
+            if isinstance(rating_val, (int, float)):
+                return float(rating_val)
+            if isinstance(rating_val, str):
+                # Handle "4.5 out of 5 stars" format
+                match = re.search(r"(\d+\.?\d*)", rating_val)
+                if match:
+                    return float(match.group(1))
+            return None
+
+        def parse_int(val) -> Optional[int]:
+            """Extract integer from various formats."""
+            if val is None:
+                return None
+            if isinstance(val, int):
+                return val
+            if isinstance(val, str):
+                # Remove commas and extract number
+                match = re.search(r"[\d,]+", val.replace(",", ""))
+                if match:
+                    try:
+                        return int(match.group().replace(",", ""))
+                    except ValueError:
+                        return None
+            return None
+
+        # Extract main fields
+        price = parse_price(raw_data.get("price"))
+        rating = parse_rating_value(
+            raw_data.get("productRating") or raw_data.get("rating")
+        )
+        review_count = parse_int(
+            raw_data.get("countReview")
+            or raw_data.get("reviewsCount")
+            or raw_data.get("reviews")
+        )
+
+        # Calculate unit price
+        unit_price = None
+        if price is not None and pack_size and pack_size > 0:
+            unit_price = price / Decimal(str(pack_size))
+
+        return {
+            "title": raw_data.get("title"),
+            "brand": raw_data.get("brand"),
+            "manufacturer": raw_data.get("manufacturer"),
+            "price": price,
+            "retail_price": parse_price(raw_data.get("retailPrice") or raw_data.get("listPrice")),
+            "shipping_price": parse_price(raw_data.get("shippingPrice")),
+            "currency": raw_data.get("currency"),
+            "unit_price": unit_price,
+            "price_saving": raw_data.get("priceSaving") or raw_data.get("savings"),
+            "rating": rating,
+            "review_count": review_count,
+            "past_sales": raw_data.get("pastSales") or raw_data.get("soldLastMonth"),
+            "availability": (
+                raw_data.get("warehouseAvailability")
+                or raw_data.get("availability")
+                or raw_data.get("inStock")
+            ),
+            "sold_by": raw_data.get("soldBy") or raw_data.get("sellerName"),
+            "fulfilled_by": raw_data.get("fulfilledBy"),
+            "seller_id": raw_data.get("sellerId"),
+            "is_prime": raw_data.get("prime", False) or raw_data.get("isPrime", False),
+            "features": raw_data.get("features") or raw_data.get("bulletPoints"),
+            "product_description": raw_data.get("description") or raw_data.get("productDescription"),
+            "main_image_url": (
+                raw_data.get("mainImage", {}).get("imageUrl")
+                if isinstance(raw_data.get("mainImage"), dict)
+                else raw_data.get("mainImage") or raw_data.get("imageUrl")
+            ),
+            "images": (
+                raw_data.get("imageUrlList")
+                or raw_data.get("images")
+                or raw_data.get("imageUrls")
+            ),
+            "videos": raw_data.get("videoeUrlList") or raw_data.get("videos"),
+            "categories": (
+                raw_data.get("categoriesExtended")
+                or raw_data.get("categories")
+                or raw_data.get("breadcrumbs")
+            ),
+            "variations": raw_data.get("variations"),
+            "variations_count": len(raw_data.get("variations", [])) if raw_data.get("variations") else 0,
+            "product_details": raw_data.get("productDetails") or raw_data.get("specifications"),
+            "review_insights": raw_data.get("reviewInsights"),
+            "raw_data": raw_data,
+        }
+
 
 # Singleton instance for easy access
 _apify_service: Optional[ApifyService] = None

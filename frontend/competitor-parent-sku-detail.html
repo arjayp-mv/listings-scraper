@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parent SKU Detail - Competitor Research</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="header"></header>
+
+    <main class="main">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <nav class="breadcrumb">
+                        <a href="competitor-parent-skus.html">Parent SKUs</a>
+                        <span>/</span>
+                        <span id="breadcrumb-sku">Loading...</span>
+                    </nav>
+                    <h1 class="page-title" id="page-title">Loading...</h1>
+                    <p class="page-subtitle" id="page-subtitle"></p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" id="export-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Export CSV
+                    </button>
+                    <button class="btn btn-secondary" id="scrape-selected-btn" style="display: none;">
+                        Scrape Selected (<span id="selected-count">0</span>)
+                    </button>
+                    <button class="btn btn-primary" id="scrape-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
+                            <polyline points="23 4 23 10 17 10"></polyline>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                        Scrape All
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid" id="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-competitors">-</div>
+                    <div class="stat-label">Competitors</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-avg-price">-</div>
+                    <div class="stat-label">Avg. Price</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-avg-rating">-</div>
+                    <div class="stat-label">Avg. Rating</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="stat-keywords">-</div>
+                    <div class="stat-label">Keywords</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="competitors">Competitors</button>
+                <button class="tab-btn" data-tab="keywords">Keywords</button>
+                <button class="tab-btn" data-tab="add">Add Competitor</button>
+            </div>
+
+            <!-- Competitors Tab -->
+            <div class="tab-content active" id="tab-competitors">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Competitors</h2>
+                        <div class="view-toggle">
+                            <button class="view-toggle-btn active" data-view="table" title="Table View">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                                    <line x1="3" y1="15" x2="21" y2="15"></line>
+                                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                                </svg>
+                                <span>Table</span>
+                            </button>
+                            <button class="view-toggle-btn" data-view="comparison" title="Comparison View">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="7" height="18"></rect>
+                                    <rect x="14" y="3" width="7" height="18"></rect>
+                                </svg>
+                                <span>Compare</span>
+                            </button>
+                            <button class="view-toggle-btn" data-view="images" title="Images View">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                    <polyline points="21 15 16 10 5 21"></polyline>
+                                </svg>
+                                <span>Images</span>
+                            </button>
+                            <button class="view-toggle-btn" data-view="content" title="Content View">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="17" y1="10" x2="3" y2="10"></line>
+                                    <line x1="21" y1="6" x2="3" y2="6"></line>
+                                    <line x1="21" y1="14" x2="3" y2="14"></line>
+                                    <line x1="17" y1="18" x2="3" y2="18"></line>
+                                </svg>
+                                <span>Content</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body" style="padding: 0;">
+                        <!-- Table View (Default) -->
+                        <div id="view-table" class="competitor-view active">
+                        <table class="table" id="competitors-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px;">
+                                        <input type="checkbox" id="select-all-competitors" onchange="toggleSelectAll(this)">
+                                    </th>
+                                    <th>ASIN</th>
+                                    <th>Title</th>
+                                    <th>Pack</th>
+                                    <th>Price</th>
+                                    <th>Unit Price</th>
+                                    <th>Rating</th>
+                                    <th>Reviews</th>
+                                    <th>Schedule</th>
+                                    <th>Last Scraped</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="competitors-body">
+                                <tr>
+                                    <td colspan="11" class="loading">
+                                        <div class="spinner"></div> Loading...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        </div>
+                        <!-- Comparison View (Competitors as columns) -->
+                        <div id="view-comparison" class="competitor-view">
+                            <div class="comparison-table-wrapper">
+                                <div class="loading"><div class="spinner"></div> Loading...</div>
+                            </div>
+                        </div>
+                        <!-- Images View -->
+                        <div id="view-images" class="competitor-view">
+                            <div class="images-comparison">
+                                <div class="loading"><div class="spinner"></div> Loading...</div>
+                            </div>
+                        </div>
+                        <!-- Content View (Title, Bullets, Description) -->
+                        <div id="view-content" class="competitor-view">
+                            <div class="content-comparison">
+                                <div class="loading"><div class="spinner"></div> Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <div class="pagination" id="competitors-pagination"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keywords Tab -->
+            <div class="tab-content" id="tab-keywords">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Linked Keywords</h2>
+                        <a href="competitor-keywords.html" class="btn btn-secondary btn-sm">Manage Keywords</a>
+                    </div>
+                    <div class="card-body" style="padding: 0;">
+                        <table class="table" id="keywords-table">
+                            <thead>
+                                <tr>
+                                    <th>Keyword</th>
+                                    <th>Notes</th>
+                                    <th>Linked Competitors</th>
+                                    <th>Created</th>
+                                </tr>
+                            </thead>
+                            <tbody id="keywords-body">
+                                <tr>
+                                    <td colspan="4" class="loading">
+                                        <div class="spinner"></div> Loading...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Competitor Tab -->
+            <div class="tab-content" id="tab-add">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Add New Competitor</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="add-competitor-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="competitor-asin">ASIN *</label>
+                                    <input type="text" id="competitor-asin" class="form-control" placeholder="e.g., B08N5WRWNW" required>
+                                </div>
+                                <div class="form-group">
+                                    <label for="competitor-marketplace">Marketplace *</label>
+                                    <select id="competitor-marketplace" class="form-control" required>
+                                        <option value="com">amazon.com</option>
+                                        <option value="ca">amazon.ca</option>
+                                        <option value="co.uk">amazon.co.uk</option>
+                                        <option value="de">amazon.de</option>
+                                        <option value="fr">amazon.fr</option>
+                                        <option value="it">amazon.it</option>
+                                        <option value="es">amazon.es</option>
+                                        <option value="co.jp">amazon.co.jp</option>
+                                        <option value="com.au">amazon.com.au</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="competitor-pack-size">Pack Size</label>
+                                    <input type="number" id="competitor-pack-size" class="form-control" value="1" min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label for="competitor-schedule">Schedule</label>
+                                    <select id="competitor-schedule" class="form-control">
+                                        <option value="">None (Manual)</option>
+                                        <option value="daily">Daily</option>
+                                        <option value="every_2_days">Every 2 Days</option>
+                                        <option value="every_3_days">Every 3 Days</option>
+                                        <option value="weekly">Weekly</option>
+                                        <option value="monthly">Monthly</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="competitor-notes">Notes</label>
+                                <textarea id="competitor-notes" class="form-control" rows="2" placeholder="Optional notes about this competitor"></textarea>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Add Competitor</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Bulk Add -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Bulk Add Competitors</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="bulk-add-form">
+                            <div class="form-group">
+                                <label for="bulk-asins">ASINs (one per line)</label>
+                                <textarea id="bulk-asins" class="form-control" rows="5" placeholder="B08N5WRWNW&#10;B09ABC1234&#10;B07XYZ5678"></textarea>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="bulk-marketplace">Marketplace</label>
+                                    <select id="bulk-marketplace" class="form-control">
+                                        <option value="com">amazon.com</option>
+                                        <option value="ca">amazon.ca</option>
+                                        <option value="co.uk">amazon.co.uk</option>
+                                        <option value="de">amazon.de</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="bulk-pack-size">Pack Size (all)</label>
+                                    <input type="number" id="bulk-pack-size" class="form-control" value="1" min="1">
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Bulk Add</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Image Lightbox -->
+    <div id="image-lightbox" class="lightbox" onclick="closeLightbox()">
+        <span class="lightbox-close">&times;</span>
+        <img id="lightbox-image" class="lightbox-image" alt="Enlarged product image">
+    </div>
+
+    <script src="js/nav.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/competitor-parent-sku-detail.js"></script>
+</body>
+</html>

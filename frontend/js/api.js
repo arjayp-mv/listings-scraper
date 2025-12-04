@@ -246,6 +246,132 @@ const api = {
     getProductScanCsvUrl: (id) => API_BASE + '/product-scans/' + id + '/export/csv',
 
     getProductScanExcelUrl: (id) => API_BASE + '/product-scans/' + id + '/export/excel',
+
+    // ===== Competitors =====
+    listCompetitors: (page = 1, pageSize = 20, skuId = null, marketplace = null, search = null, includeData = false) => {
+        let url = '/competitors?page=' + page + '&per_page=' + pageSize;
+        if (skuId) url += '&sku_id=' + skuId;
+        if (marketplace) url += '&marketplace=' + marketplace;
+        if (search) url += '&search=' + encodeURIComponent(search);
+        if (includeData) url += '&include_data=true';
+        return fetchAPI(url);
+    },
+
+    createCompetitor: (data) =>
+        fetchAPI('/competitors', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    bulkCreateCompetitors: (competitors) =>
+        fetchAPI('/competitors/bulk', {
+            method: 'POST',
+            body: JSON.stringify({ competitors }),
+        }),
+
+    getCompetitor: (id) => fetchAPI('/competitors/' + id),
+
+    updateCompetitor: (id, data) =>
+        fetchAPI('/competitors/' + id, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
+
+    deleteCompetitor: (id) =>
+        fetchAPI('/competitors/' + id, { method: 'DELETE' }),
+
+    getCompetitorPriceHistory: (id, days = 365) =>
+        fetchAPI('/competitors/' + id + '/price-history?days=' + days),
+
+    updateCompetitorSchedule: (id, data) =>
+        fetchAPI('/competitors/' + id + '/schedule', {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
+
+    // ===== Competitor Keywords =====
+    listCompetitorKeywords: (page = 1, pageSize = 20, skuId = null, search = null) => {
+        let url = '/competitors/keywords?page=' + page + '&per_page=' + pageSize;
+        if (skuId) url += '&sku_id=' + skuId;
+        if (search) url += '&search=' + encodeURIComponent(search);
+        return fetchAPI(url);
+    },
+
+    createCompetitorKeyword: (data) =>
+        fetchAPI('/competitors/keywords', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    getCompetitorKeyword: (id) => fetchAPI('/competitors/keywords/' + id),
+
+    updateCompetitorKeyword: (id, data) =>
+        fetchAPI('/competitors/keywords/' + id, {
+            method: 'PUT',
+            body: JSON.stringify(data),
+        }),
+
+    deleteCompetitorKeyword: (id) =>
+        fetchAPI('/competitors/keywords/' + id, { method: 'DELETE' }),
+
+    linkChannelSkuToKeyword: (keywordId, channelSkuId) =>
+        fetchAPI('/competitors/keywords/' + keywordId + '/channel-skus/' + channelSkuId, {
+            method: 'POST',
+        }),
+
+    unlinkChannelSkuFromKeyword: (keywordId, channelSkuId) =>
+        fetchAPI('/competitors/keywords/' + keywordId + '/channel-skus/' + channelSkuId, {
+            method: 'DELETE',
+        }),
+
+    linkCompetitorToKeyword: (keywordId, competitorId) =>
+        fetchAPI('/competitors/keywords/' + keywordId + '/competitors/' + competitorId, {
+            method: 'POST',
+        }),
+
+    unlinkCompetitorFromKeyword: (keywordId, competitorId) =>
+        fetchAPI('/competitors/keywords/' + keywordId + '/competitors/' + competitorId, {
+            method: 'DELETE',
+        }),
+
+    // ===== Competitor Scrape Jobs =====
+    listCompetitorScrapeJobs: (page = 1, pageSize = 20, status = null) => {
+        let url = '/competitors/scrape-jobs?page=' + page + '&per_page=' + pageSize;
+        if (status) url += '&status=' + status;
+        return fetchAPI(url);
+    },
+
+    createCompetitorScrapeJob: (data) =>
+        fetchAPI('/competitors/scrape-jobs', {
+            method: 'POST',
+            body: JSON.stringify(data),
+        }),
+
+    getCompetitorScrapeJob: (id) => fetchAPI('/competitors/scrape-jobs/' + id),
+
+    // ===== Competitor Dashboard =====
+    getCompetitorDashboardStats: () => fetchAPI('/competitors/dashboard/stats'),
+
+    getCompetitorStatsBySku: (skuId) => fetchAPI('/competitors/dashboard/by-sku/' + skuId),
+
+    listParentSkusWithCompetitorStats: (page = 1, pageSize = 20, search = null) => {
+        let url = '/competitors/parent-skus?page=' + page + '&per_page=' + pageSize;
+        if (search) url += '&search=' + encodeURIComponent(search);
+        return fetchAPI(url);
+    },
+
+    // ===== Competitor Exports =====
+    getCompetitorExportCsvUrl: (skuId = null) => {
+        let url = API_BASE + '/competitors/export/csv';
+        if (skuId) url += '?sku_id=' + skuId;
+        return url;
+    },
+
+    getCompetitorPriceChangerExportUrl: (skuId = null) => {
+        let url = API_BASE + '/competitors/export/price-changer';
+        if (skuId) url += '?sku_id=' + skuId;
+        return url;
+    },
 };
 
 // Export for use in other scripts

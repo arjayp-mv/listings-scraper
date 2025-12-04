@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keywords - Competitor Research</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <header class="header"></header>
+
+    <main class="main">
+        <div class="container">
+            <!-- Page Header -->
+            <div class="page-header">
+                <div>
+                    <h1 class="page-title">Keywords</h1>
+                    <p class="page-subtitle">Manage keywords for competitor research</p>
+                </div>
+                <button class="btn btn-primary" id="add-keyword-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 4px;">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add Keyword
+                </button>
+            </div>
+
+            <!-- Filters -->
+            <div class="card">
+                <div class="card-body">
+                    <div class="filters-row">
+                        <div class="filter-group">
+                            <label for="search-input">Search</label>
+                            <input type="text" id="search-input" class="form-control" placeholder="Search keywords...">
+                        </div>
+                        <div class="filter-group">
+                            <label for="sku-filter">Parent SKU</label>
+                            <select id="sku-filter" class="form-control">
+                                <option value="">All SKUs</option>
+                            </select>
+                        </div>
+                        <div class="filter-group" style="align-self: flex-end;">
+                            <button type="button" class="btn btn-secondary" id="search-btn">Search</button>
+                            <button type="button" class="btn btn-secondary" id="clear-btn">Clear</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keywords Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="4" y1="9" x2="20" y2="9"></line>
+                            <line x1="4" y1="15" x2="20" y2="15"></line>
+                            <line x1="10" y1="3" x2="8" y2="21"></line>
+                            <line x1="16" y1="3" x2="14" y2="21"></line>
+                        </svg>
+                        Keywords
+                    </h2>
+                </div>
+                <div class="card-body" style="padding: 0;">
+                    <table class="table" id="keywords-table">
+                        <thead>
+                            <tr>
+                                <th>Keyword</th>
+                                <th>Parent SKU</th>
+                                <th>Notes</th>
+                                <th>Channel SKUs</th>
+                                <th>Competitors</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="keywords-body">
+                            <tr>
+                                <td colspan="7" class="loading">
+                                    <div class="spinner"></div> Loading...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer">
+                    <div class="pagination" id="pagination"></div>
+                </div>
+            </div>
+
+            <!-- Add/Edit Keyword Modal -->
+            <div class="modal" id="keyword-modal" style="display: none;">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="modal-title">Add Keyword</h3>
+                        <button class="modal-close" id="close-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="keyword-form">
+                            <input type="hidden" id="keyword-id">
+                            <div class="form-group">
+                                <label for="keyword-text">Keyword *</label>
+                                <input type="text" id="keyword-text" class="form-control" placeholder="e.g., organic dog treats" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="keyword-sku">Parent SKU *</label>
+                                <select id="keyword-sku" class="form-control" required>
+                                    <option value="">Select a Parent SKU</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="keyword-notes">Notes</label>
+                                <textarea id="keyword-notes" class="form-control" rows="3" placeholder="Optional notes about this keyword"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" id="cancel-modal">Cancel</button>
+                        <button class="btn btn-primary" id="save-keyword">Save</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Link Modal -->
+            <div class="modal" id="link-modal" style="display: none;">
+                <div class="modal-overlay"></div>
+                <div class="modal-content" style="max-width: 600px;">
+                    <div class="modal-header">
+                        <h3 class="modal-title" id="link-modal-title">Manage Links</h3>
+                        <button class="modal-close" id="close-link-modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="tabs" style="margin-bottom: 16px;">
+                            <button class="tab-btn active" data-link-tab="channel-skus">Channel SKUs</button>
+                            <button class="tab-btn" data-link-tab="competitors">Competitors</button>
+                        </div>
+
+                        <div class="link-tab-content active" id="link-tab-channel-skus">
+                            <p class="text-muted" style="margin-bottom: 12px;">Select Channel SKUs to link to this keyword</p>
+                            <div id="channel-sku-list" style="max-height: 300px; overflow-y: auto;">
+                                <p class="text-muted">Loading...</p>
+                            </div>
+                        </div>
+
+                        <div class="link-tab-content" id="link-tab-competitors" style="display: none;">
+                            <p class="text-muted" style="margin-bottom: 12px;">Select Competitors to link to this keyword</p>
+                            <div id="competitor-list" style="max-height: 300px; overflow-y: auto;">
+                                <p class="text-muted">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" id="close-link-btn">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/nav.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/competitor-keywords.js"></script>
+</body>
+</html>
