@@ -726,8 +726,6 @@ def _check_scheduled_competitor_scrapes(db) -> None:
         by_marketplace[mp].append(comp)
 
     # Create a job for each marketplace
-    from .schemas import ScrapeJobCreate
-
     for marketplace, competitors in by_marketplace.items():
         from ..competitors.schemas import ScrapeJobCreate as CompScrapeJobCreate
 
